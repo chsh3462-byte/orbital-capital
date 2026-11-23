@@ -4,6 +4,10 @@
 
 ## 실행
 
+**[설치 없이 브라우저에서 바로 플레이](https://chsh3462-byte.github.io/orbital-capital/)**
+
+진행 상황은 플레이한 브라우저에 저장됩니다. 같은 기기의 같은 브라우저에서 위 주소를 다시 열면 이어서 플레이할 수 있습니다.
+
 [Windows x64 배포본 다운로드](https://github.com/chsh3462-byte/orbital-capital/releases/latest/download/OrbitalCapital-Windows-x64.zip) · [버전별 릴리스](https://github.com/chsh3462-byte/orbital-capital/releases)
 
 ZIP 전체를 압축 해제한 뒤 `OrbitalCapital-win-x64` 폴더에서 `OrbitalCapital.exe`를 실행하세요.

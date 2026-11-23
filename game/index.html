@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Orbital Capital · 오르빗 캐피탈</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<aside class="side">
+<div class="brand"><svg viewBox="0 0 40 40" aria-hidden="true"><path fill="#68eed2" d="M1 29 21 4h11L12 29zM17 30l9-11 12 16H22z"/><path fill="#1a9a8f" d="m14 32 5-6 6 9H12z"/></svg><div>ORBITAL<br><b>CAPITAL</b></div></div>
+<div class="side-section">워크스페이스</div>
+<nav id="nav"></nav>
+<div class="side-bottom"><div class="side-section">운영 지원</div><button data-act="guideStart" data-ico="finance" title="첫 근무 인계서 열기">근무 인계서</button><button data-act="save" data-ico="save">게임 저장</button><button data-act="loads" data-ico="folder">불러오기</button><div class="profile"><span class="corp-logo">OC</span><div><b>오르빗 캐피탈</b><small>독립 우주 기업</small></div></div></div>
+</aside>
+<main><header class="top"><div class="title-wrap"><span class="overline" id="section-en">COMMAND CENTER</span><h1 id="page-title">경영 관제실</h1></div><div class="clockbar"><div class="date"><span data-icon="calendar"></span><b id="date">2186.01.11</b></div><div class="playback"><button class="icon-btn" id="pause" data-act="pause" aria-label="일시정지"></button><button id="speed" data-act="speed" title="진행 속도 변경">1×</button></div></div></header>
+<section id="guide" aria-label="첫 근무 인계서" hidden></section><div id="metrics" class="metrics"></div>
+<div id="dashboard"><div class="main-grid"><section class="panel map-panel"><div class="panel-head"><h2><i class="stripe"></i>궤도 무역 지도</h2><span class="live" id="map-live">실시간</span></div>
+<div class="map-stage"><canvas id="galaxy" aria-label="아스트라 성계의 본사와 행성, 무역 항로"></canvas><div id="node-labels"></div><div class="sector"><span class="locator"></span><div>ASTRA SYSTEM<small>SECTOR 07</small></div></div>
+<div class="map-controls"><button data-act="routes" title="항로 표시 전환" aria-label="항로 표시 전환" aria-pressed="true" data-ico="route"></button><button data-act="zoomIn" aria-label="지도 확대">+</button><button data-act="zoomOut" aria-label="지도 축소">−</button></div></div>
+<div class="map-legend"><span><i class="key mint"></i>자사 거점</span><span><i class="key violet"></i>경쟁사</span><span><i class="key hollow"></i>미개척</span><b>6개 행성</b></div></section>
+<div class="right-stack"><section class="panel"><div class="panel-head"><h2><i class="stripe"></i>은하 증권 시장</h2><button class="link-btn" data-nav="stocks">거래소 <span>›</span></button></div><div id="ticker-list"></div></section>
+<section class="panel fleet-panel"><div class="panel-head"><h2><i class="stripe"></i>함대 현황</h2><button class="link-btn" data-nav="research">연구소 <span>›</span></button></div><div id="fleet"></div></section></div></div>
+<div class="lower-grid"><section class="panel"><div class="panel-head"><h2><i class="stripe"></i>운영 기록</h2><button class="link-btn" data-act="logs">전체 기록 <span>›</span></button></div><div id="logs"></div></section><section class="panel"><div class="panel-head"><h2><i class="stripe"></i>일일 손익</h2><button class="link-btn" data-nav="finance">재무제표 <span>›</span></button></div><div id="breakdown"></div></section></div></div>
+<section id="workspace" hidden></section><footer><span><i class="dot"></i> 로컬 시스템 연결됨</span><span id="saved-status">로컬 세이브 준비</span></footer>
+</main><dialog id="dialog"><div class="dialog-head"><h2 id="dialog-title"></h2><button data-act="close" class="icon-btn" aria-label="닫기">×</button></div><div id="dialog-body"></div></dialog><div id="toast" role="status"></div>
+<link rel="stylesheet" href="lounge.css"><script src="assets/sprites.js"></script><script src="js/data.js"></script><script src="js/tutorial.js"></script><script src="js/roulette.js"></script><script src="js/registry.js"></script><script src="js/salon.js"></script><script src="js/freeport.js"></script><script src="js/leisure.js"></script><script src="js/economy.js"></script><script src="js/storage.js"></script><script src="js/renderer.js"></script><script src="js/ui.js"></script><script src="js/app.js"></script></body></html>

@@ -64,7 +64,7 @@ window.Freeport=(()=>{
   function card(s,i,where){
     const owned=s.leisure.owned.includes(i.id),ship=Leisure.source(i)==='hangar';
     let caption=ship?shipSpec(i.id):i.kind;
-    const price=where==='lounge'?(exhibit(s,i)?'전시 중':'보관 중'):(owned?'인도 완료':UI.money(i.price));
+    const price=where==='lounge'?(exhibit(s,i)?'전시 중':'보관 중'):(owned?'인도 완료':(where==='auction'?'최저 ':'')+UI.money(i.price));
     return '<button class="lux-lot '+(ship?'ship-lot':'')+'" data-act="luxItem" data-id="'+i.id+'"><div class="lot-picture">'+PixelArt.thumb(i.art,ship?112:88)+'</div><div class="lot-copy"><small>'+caption+'</small><h3>'+i.name+'</h3><span>'+price+'</span></div></button>';
   }
   function exhibitWall(s){
@@ -73,9 +73,26 @@ window.Freeport=(()=>{
       return '<section class="display-bay"><small>'+name+'</small>'+(i?'<button data-act="luxItem" data-id="'+i.id+'">'+PixelArt.thumb(i.art,74)+'<b>'+i.name+'</b></button>':'<div class="vacant-bay">'+UI.icon(key==='dock'?'rocket':key==='wall'?'grid':'box')+'<span>비어 있음</span></div>')+'</section>';
     }).join('')+'</div>';
   }
-  function lounge(s){
+  function shelf(s,items,where,view){
+    if(!items.length)return '';
+    const U=UI;
+    const filtered=items.filter(i=>{
+      if(where==='hangar'&&view.filter!=='all')return Registry.ships[i.id][0]===Number(view.filter);
+      if(where==='market'&&view.filter!=='all')return Leisure.slot(i)===view.filter;
+      return true;
+    }).sort((a,b)=>view.desc?b.price-a.price:a.price-b.price);
+    const pages=Math.max(1,Math.ceil(filtered.length/10)),page=Math.min(view.page,pages-1);
+    const choices=where==='hangar'?Registry.grades.map((n,i)=>[String(i+1),n]):where==='market'?[['cabinet','공예 · 세공'],['wall','벽면 작품']]:[];
+    const filters=choices.length?'<div class="action-row">'+[['all','전체'],...choices].map(([k,n])=>U.btn(n,'shelfFilter',k,view.filter===k,false)).join('')+'</div>':'';
+    const titles={hangar:'비행선 목록',market:'회랑 진열품',auction:'비밀 위탁 도록',lounge:'보관품 목록'};
+    return '<div class="lounge-heading"><h2>'+titles[where]+' · '+items.length+(where==='hangar'?'척':'점')+'</h2></div>'+filters+
+      '<div class="toolbar"><div class="action-row">'+U.btn('낮은 가격순','shelfSort','asc',!view.desc,false)+U.btn('높은 가격순','shelfSort','desc',view.desc,false)+'</div><div class="action-row">'+
+      U.btn('이전','shelfPage',String(page-1),page===0,false)+'<span>'+ (page+1)+' / '+pages+'</span>'+U.btn('다음','shelfPage',String(page+1),page+1>=pages,false)+'</div></div>'+
+      '<div class="lux-catalog '+(where==='hangar'?'ships-on-show':'')+'">'+filtered.slice(page*10,(page+1)*10).map(i=>card(s,i,where)).join('')+'</div>';
+  }
+  function lounge(s,view){
     const owned=s.leisure.owned.map(Leisure.get);
-    return '<section class="observatory"><div class="window-view"><div class="window-caption"><small>본사 주거 구역 · 라이라 전망창</small><h2>대표 전용 전망실</h2></div></div>'+exhibitWall(s)+'</section><div class="lounge-heading"><div><h2>개인 보관고 · '+owned.length+'점</h2><p>'+(owned.length?'소장품을 골라 전시하거나 보관고로 되돌릴 수 있습니다.':'자유항에서 인도받은 물품과 경매 낙찰품이 이곳에 도착합니다.')+'</p></div><button class="btn" data-nav="port">자오선 자유항 방문</button></div><div class="lux-catalog">'+owned.map(i=>card(s,i,'lounge')).join('')+'</div>';
+    return '<section class="observatory"><div class="window-view"><div class="window-caption"><small>본사 주거 구역 · 라이라 전망창</small><h2>대표 전용 전망실</h2></div></div>'+exhibitWall(s)+'</section><div class="lounge-heading"><div><h2>개인 보관고 · '+owned.length+'점</h2><p>'+(owned.length?'소장품을 골라 전시하거나 보관고로 되돌릴 수 있습니다.':'자유항에서 인도받은 물품과 경매 낙찰품이 이곳에 도착합니다.')+'</p></div><button class="btn" data-nav="port">자오선 자유항 방문</button></div>'+shelf(s,owned,'lounge',view);
   }
   function auctionRoom(s){
     const a=s.leisure.auction,U=UI;
@@ -90,17 +107,16 @@ window.Freeport=(()=>{
     if(upcoming.length)body+='<div class="lounge-heading"><h2>다음 위탁 순서</h2></div><div class="lux-catalog">'+upcoming.map(i=>'<article class="lux-lot"><div class="lot-picture">'+PixelArt.thumb(i.art,64)+'</div><div class="lot-copy"><small>봉인 위탁품</small><h3>'+i.name+'</h3><span>최저 '+U.money(i.price)+'</span></div></article>').join('')+'</div>';
     return body+'<div class="lounge-heading"><div><h2>최근 개찰 기록</h2><p>최고액 낙찰 · 동액이면 먼저 봉인한 기관에 우선권이 있습니다.</p></div></div>'+(a.history.length?'<div class="auction-history">'+a.history.slice(0,6).map(h=>'<div><span>'+U.date(h.day)+' · '+Leisure.get(h.id).name+'</span><b>'+(h.winner==='player'?'오르빗 캐피탈':h.winner)+' · '+U.money(h.amount)+'</b></div>').join('')+'</div>':'<p class="hint">첫 개찰을 기다리는 중입니다.</p>');
   }
-  function port(s,venue){
+  function port(s,venue,view){
     const v=venues[venue]||venues.market,U=UI;
     const tabs=Object.entries(venues).map(([k,d])=>'<button class="tab '+(k===venue?'active':'')+'" data-act="venue" data-id="'+k+'" aria-pressed="'+(k===venue)+'">'+d.name+'</button>').join('');
     const hero='<section class="port-hero" style="background-image:url(assets/confluence-'+v.art+'.png)"><div class="window-caption"><small>'+v.place+'</small><h2>'+v.title+'</h2></div></section>';
     let body='';
-    if(venue==='auction')body=auctionRoom(s);
+    if(venue==='auction')body=auctionRoom(s)+(s.leisure.auction.invited?shelf(s,relics(),venue,view):'');
     else if(venue==='casino')body='<section class="casino-boarding"><div class="boarding-emblem">'+U.icon('star')+'</div><div><small>상갑판 · 공개 테이블</small><h2>마호가니 룰렛</h2><p>녹색 펠트 위에 칩을 놓고 상아색 공이 멈추는 칸을 기다리세요. 승선은 무료, 한 판은 500 CR입니다.</p></div>'+U.btn('승선 · 테이블 입장','casino')+'</section><div class="salon-tables">'+Object.entries(Salon.names).map(([id,n],i)=>'<article class="salon-seat"><span class="table-mark">'+['♠','♦','⚓'][i]+'</span><h3>'+n+'</h3><p>'+Salon.descriptions[id]+'</p>'+U.btn('테이블 입장','salon',id)+'</article>').join('')+'</div>';
     else{
       const stock=Leisure.catalog.filter(i=>Leisure.source(i)===venue);
-      const groups=venue==='hangar'?Registry.grades.map((name,index)=>[name+' 선석 · 인증 항로 '+(3+index)+'곳',stock.filter(i=>Registry.ships[i.id][0]===index+1).sort((a,b)=>a.price-b.price)]):[['세공사와 공예 상인',stock.filter(i=>Leisure.slot(i)==='cabinet')],['갤러리 가판',stock.filter(i=>Leisure.slot(i)==='wall')]];
-      body=groups.map(([name,items])=>'<div class="lounge-heading"><h2>'+name+'</h2><span>'+items.length+(venue==='hangar'?'척':'점')+' 진열</span></div><div class="lux-catalog '+(venue==='hangar'?'ships-on-show':'')+'">'+items.map(i=>card(s,i,venue)).join('')+'</div>').join('');
+      body=shelf(s,stock,venue,view);
     }
     return '<nav class="port-tabs" aria-label="자유항 방문 장소">'+tabs+'</nav>'+hero+'<p class="port-intro">'+v.story+'</p>'+body;
   }
@@ -114,6 +130,9 @@ window.Freeport=(()=>{
       if(source==='hangar')buttons+=U.btn('유람 비행','cruise',id+'/lyra',false,false);
       if(i.kind==='장신구')buttons+=U.btn(s.leisure.worn===id?'착용 해제':'프로필에 착용','luxWear',id,false,false);
       meta=U.kv('배치 장소',where);
+    }else if(source==='auction'&&location==='auction'){
+      meta=U.kv('최저 입찰가',U.money(i.price))+U.kv('위탁 상태',owned?'인도 완료':s.leisure.auction.lot?.id===id?'입찰 접수 중':'출품 대기');
+      if(s.leisure.auction.lot?.id===id)buttons=U.btn('봉인 입찰 열기','auctionBid',id);
     }else if(source===location&&source!=='auction'){
       meta=U.kv('판매가',U.money(i.price))+U.kv('가용 자금',U.money(s.cash));
       buttons=owned?'<button class="btn" data-nav="lounge">인도 완료 · 내 보관고</button>':U.btn('구입 · 보관고로 인도','luxBuy',id,s.cash<i.price);

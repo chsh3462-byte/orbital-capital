@@ -21,11 +21,14 @@ window.LocalSave = (() => {
       if(s.version===1&&s.guide===undefined)s.guide=Tutorial.initial();
       if(s.version===1&&s.leisure===undefined)s.leisure=Leisure.initial();
       if(s.version===1&&s.leisure){
-        const expanded=s.leisure.tables===undefined;
+        const oldFour=s.leisure.tables===undefined;
         Leisure.migrate(s.leisure);
         // A collector who finished the old catalog can receive the new consignments.
-        if(expanded&&s.leisure.auction?.invited&&s.leisure.auction.lot===null&&['astrolabe','key','tideglass','echo'].every(id=>s.leisure.owned.includes(id))){
-          s.leisure.auction.lot=Freeport.nextLot(s,'echo');
+        if(s.leisure.auction?.invited&&s.leisure.auction.lot===null){
+          const last=oldFour?'echo':'bell';
+          const previous=['astrolabe','key','tideglass','echo'];
+          if(!oldFour)previous.push('compass','mask','seed','bell');
+          if(previous.every(id=>s.leisure.owned.includes(id)))s.leisure.auction.lot=Freeport.nextLot(s,last);
         }
       }
       const valid=s.version===1&&integer(s.day,1)&&integer(s.tick,0,3)&&integer(s.cash)&&integer(s.seed,0,4294967295)&&finite(s.rep,0,100)&&Number.isSafeInteger(s.realized)

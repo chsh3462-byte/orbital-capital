@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const runtime = vm.createContext({});
 runtime.window = runtime;
-for (const file of ['data', 'tutorial', 'roulette', 'registry', 'salon', 'freeport', 'leisure', 'staff', 'commerce', 'freight', 'economy', 'storage']) {
+for (const file of ['data', 'tutorial', 'roulette', 'collection', 'registry', 'salon', 'freeport', 'leisure', 'staff', 'commerce', 'freight', 'economy', 'storage']) {
   const source = fs.readFileSync(path.join(__dirname, '../game/js', file + '.js'), 'utf8');
   vm.runInContext(source, runtime, {filename:file + '.js'});
 }
@@ -162,7 +162,39 @@ assert.throws(()=>L.purchase(broke,'yacht','hangar'));
 for(const i of L.catalog.filter(i=>L.source(i)==='auction')){
   for(const venue of ['market','hangar','auction','lounge'])assert.throws(()=>L.purchase(loungeGame,i.id,venue));
 }
-assert.equal(L.catalog.length,32);
+assert.equal(L.catalog.length,150);
+for(const k of ['id','name','art'])assert.equal(new Set(L.catalog.map(i=>i[k])).size,150);
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../game/assets/sprites.js'),'utf8'),runtime);
+for(const i of L.catalog){
+  const spec=runtime.SPRITES[i.art];assert.equal(spec.frames,4);
+  const png=fs.readFileSync(path.join(__dirname,'../game',spec.src));
+  assert.equal(png.readUInt32BE(16),4*spec.w);assert.equal(png.readUInt32BE(20),spec.h);
+}
+{
+  const collector=clone(loungeGame);collector.cash=2_000_000_000;
+  for(const venue of ['hangar','market','auction']){
+    const items=L.catalog.filter(i=>L.source(i)===venue);assert.equal(items.length,50);
+    if(venue==='auction')continue;
+    for(const item of items){
+      if(!collector.leisure.owned.includes(item.id))L.purchase(collector,item.id,venue);
+      L.display(collector,item.id);
+    }
+  }
+  F.invite(collector);
+  for(let lot=0;lot<50;lot++){
+    const current=collector.leisure.auction.lot;assert.ok(current);
+    F.bid(collector,current.id,Math.max(...current.quotes)+1000);
+    collector.day=current.close;F.closeAuction(collector);
+  }
+  assert.equal(collector.leisure.auction.lot,null);
+  assert.equal(clone(collector).leisure.owned.length,150);
+  const previous=clone(collector);
+  previous.leisure.owned=previous.leisure.owned.filter(id=>!runtime.Collection.items.some(i=>i.id===id));
+  previous.leisure.displays={dock:'yacht',cabinet:'brooch',wall:'print'};
+  previous.leisure.auction.history=[];
+  assert.equal(clone(previous).leisure.auction.lot.id,'dial-noon');
+  console.log('PASS: 150 unique collectibles and animation sheets, purchases, complete sealed auction rotation and v0.3 collection migration.');
+}
 const old=clone(loungeGame);
 delete old.leisure.displays;delete old.leisure.auction;delete old.leisure.wheel;
 old.leisure.exhibit='print';
@@ -205,7 +237,7 @@ assert.equal(JSON.stringify(broke),intact);
 assert.equal(JSON.stringify(clone(loungeGame).leisure),JSON.stringify(loungeGame.leisure));
 console.log('PASS: economic regression, old save migration, public venues, owned-only display, sealed auctions, escrow, deterministic settlement, single-zero roulette.');
 const ships=L.catalog.filter(i=>L.source(i)==='hangar');
-assert.equal(ships.length,8);
+assert.equal(ships.length,50);
 for(const ship of ships)assert.equal(runtime.Registry.ports(ship.id).length,2+runtime.Registry.ships[ship.id][0]);
 const completed=clone(loungeGame);
 completed.leisure.owned.push(...['astrolabe','key','tideglass','echo'].filter(id=>!completed.leisure.owned.includes(id)));

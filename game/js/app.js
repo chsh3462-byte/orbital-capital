@@ -5,6 +5,8 @@
   let saveEnabled=true,toastTimer,animationBatch=0,lastPaint=-1,saveQueue=Promise.resolve(),guideView='';
   let exchangePort='nereid';
   let venue='market',wheelPick='red',spinEnd=0;
+  const shelves=Object.fromEntries(['market','hangar','auction','lounge'].map(key=>[key,{page:0,desc:false,filter:'all'}]));
+  const currentShelf=()=>shelves[page==='lounge'?'lounge':venue];
   const spinDuration=2200;
   const dialog=$('#dialog'),workspace=$('#workspace');
   const map=new P.StarMap($('#galaxy'),$('#node-labels'),id=>open('planet',id));P.load();
@@ -75,7 +77,9 @@
     $('#speed').textContent=speed+'×';$('#map-live').textContent=paused?'일시정지':'실시간';
     if(page==='dashboard'){
       $('#ticker-list').innerHTML=U.tickers(state);$('#fleet').innerHTML=U.fleet(state);$('#logs').innerHTML=U.logs(state.logs.slice(0,4));$('#breakdown').innerHTML=U.bars(state);
-    }else workspace.innerHTML=U[page](state,page==='port'?venue:page==='exchange'?exchangePort:period);
+    }else if(page==='port')workspace.innerHTML=Freeport.port(state,venue,currentShelf());
+    else if(page==='lounge')workspace.innerHTML=Freeport.lounge(state,currentShelf());
+    else workspace.innerHTML=U[page](state,page==='exchange'?exchangePort:period);
     const e=state.event&&D.events.find(e=>e.id===state.event.id);
     let notice=$('#event');if(e){
       if(!notice){notice=document.createElement('div');notice.className='notice';notice.id='event';$('#metrics').after(notice);}
@@ -194,6 +198,9 @@
         case 'research':E.research(state,id);break;
         case 'venue':
           if(Object.hasOwn(Freeport.venues,id)){venue=id;nav('port');}return;
+        case 'shelfPage':currentShelf().page=Math.max(0,Number(id));render();return;
+        case 'shelfSort':currentShelf().desc=id==='desc';currentShelf().page=0;render();return;
+        case 'shelfFilter':currentShelf().filter=id;currentShelf().page=0;render();return;
         case 'auctionEnter':if(page==='port'&&venue==='auction'){Freeport.invite(state);render();auto();}return;
         case 'auctionBid':if(page==='port'&&venue==='auction'&&state.leisure.auction.lot?.id===id)await open(a,id);return;
         case 'submitBid':
@@ -251,10 +258,10 @@
       }
       if(modal?.kind==='cruise'&&dialog.open)Leisure.fly($('.cruise-view'),modal.id,now/1000);
       lastPaint=now;
-      const index=Math.floor(playTime*8)+1;
+      const showcaseTime=now/1000,index=Math.floor(showcaseTime*8)+1;
       if(animationBatch!==index){
         animationBatch=index;document.querySelectorAll('.sprite-thumb').forEach(c=>{
-          const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);P.sprite(ctx,c.dataset.sprite,c.width/2,c.height/2,c.width,playTime);
+          const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);P.sprite(ctx,c.dataset.sprite,c.width/2,c.height/2,c.width,showcaseTime);
         });
       }
     }

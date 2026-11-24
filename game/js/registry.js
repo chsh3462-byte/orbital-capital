@@ -24,7 +24,8 @@ window.Registry=(()=>{
     twin:[4,'6인승 태양 범선',105],liner:[4,'8인승 살롱선',113]
   };
   const routes=['lyra','nereid','orion','veyra','eir','thalos'];
+  Object.assign(ships,Collection.ships);
   const ports=id=>routes.slice(0,ships[id][0]+2);
   const gradeName=id=>['Ⅰ','Ⅱ','Ⅲ','Ⅳ'][ships[id][0]-1]+' · '+grades[ships[id][0]-1];
-  return {additions,grades,ships,ports,gradeName};
+  return {additions:additions.concat(Collection.items),grades,ships,ports,gradeName};
 })();

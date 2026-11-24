@@ -1,14 +1,23 @@
 'use strict';
 window.PixelArt=(()=>{
   const cache={};
+  function sheetImage(key,spec){
+    if(!cache[key]){
+      const im=new Image();
+      cache[key]=im;im.src=spec.src;
+    }
+    return cache[key];
+  }
   function load(){
     for(const [key,spec] of Object.entries(window.SPRITES||{})){
-      const im=new Image();im.src=spec.src;cache[key]=im;
+      if(!key.startsWith('ex-'))sheetImage(key,spec);
     }
   }
   function sprite(ctx,key,cx,cy,w,t,angle=0){
-    const spec=window.SPRITES?.[key],im=cache[key];
-    if(!spec||!im?.complete||!im.naturalWidth)return;
+    const spec=window.SPRITES?.[key];
+    if(!spec)return;
+    const im=sheetImage(key,spec);
+    if(!im.complete||!im.naturalWidth)return;
     const frame=Math.floor(t*spec.fps)%spec.frames;
     const h=Math.round(w*spec.h/spec.w);
     ctx.save();ctx.imageSmoothingEnabled=false;ctx.translate(Math.round(cx),Math.round(cy));

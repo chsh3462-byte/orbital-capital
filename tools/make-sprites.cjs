@@ -304,5 +304,6 @@ for(const key of ['stock','ad','chip','deed','credits'])sheet(key,32,32,4,(g,f)=
 require('./lounge-art.cjs')({sheet, shade, noise, rnd, TAU});
 require('./confluence-art.cjs')({sheet,shade,noise,rnd,TAU});
 require('./registry-art.cjs')({sheet,TAU});
+require('./collection-art.cjs')({sheet,shade,TAU});
 fs.writeFileSync(path.join(out,'sprites.js'),'window.SPRITES = '+JSON.stringify(manifest,null,2)+';\n');
 console.log('Generated '+Object.keys(manifest).length+' four-frame sprite sheets.');

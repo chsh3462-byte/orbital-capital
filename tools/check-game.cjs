@@ -6,12 +6,50 @@ const path = require('node:path');
 const vm = require('node:vm');
 const runtime = vm.createContext({});
 runtime.window = runtime;
-for (const file of ['data', 'tutorial', 'roulette', 'registry', 'salon', 'freeport', 'leisure', 'freight', 'economy', 'storage']) {
+for (const file of ['data', 'tutorial', 'roulette', 'registry', 'salon', 'freeport', 'leisure', 'staff', 'commerce', 'freight', 'economy', 'storage']) {
   const source = fs.readFileSync(path.join(__dirname, '../game/js', file + '.js'), 'utf8');
   vm.runInContext(source, runtime, {filename:file + '.js'});
 }
 const E = runtime.Economy, check = runtime.LocalSave.validate;
 const clone = state => check(JSON.parse(JSON.stringify(state)));
+{
+  const C=runtime.Commerce,H=runtime.Staff;
+  const nextDay=s=>{let row;while(!row)row=E.step(s);return row;};
+  const s=E.newGame();
+  const original=s.markets.slice(0,3);s.markets=original;delete s.hr;delete s.exchange;
+  check(s);assert.equal(s.markets.length,5);assert.equal(s.markets[0],original[0]);
+  const lines=[{good:'tea',qty:8},{good:'gear',qty:4}];
+  C.trade(s,'nereid','tea',10,true);
+  C.trade(s,'nereid','tea',2,false);
+  assert.throws(()=>C.trade(s,'lyra','tea',1,false));
+  assert.throws(()=>C.schedule(s,'nereid','nereid',lines));
+  C.schedule(s,'nereid','lyra',lines);
+  const prior=s.cash, ask=C.quote(s,'nereid','gear').ask, regular=E.fleet(s)-1;
+  const day1=nextDay(s);assert.equal(C.freeShips(s),regular);
+  assert.equal(s.cash,prior-ask*4+day1.net-day1.goodsSales+day1.goodsCost);
+  assert.equal(s.exchange.stock.length,0);assert.ok(s.exchange.routes[0].cargo);
+  const again=clone(s),cost=again.exchange.routes[0].cargo.cost;
+  const expected=lines.reduce((n,l)=>n+C.quote(again,'lyra',l.good).bid*l.qty,0);
+  const day2=nextDay(again);assert.equal(day2.goodsSales,expected);assert.equal(day2.goodsCost,cost);
+  assert.equal(again.exchange.routes[0].trips,1);
+  nextDay(again);C.cancel(again,1);assert.ok(again.exchange.routes[0].stop);
+  const ending=clone(again);nextDay(ending);assert.equal(ending.exchange.routes.length,0);
+  assert.equal(nextDay(ending).goodsSales,0);
+  const waiting=clone(s);C.cancel(waiting,1);nextDay(waiting);
+  C.schedule(waiting,'eir','lyra',lines);waiting.cash=0;
+  nextDay(waiting);assert.equal(waiting.exchange.routes[0].cargo,null);
+  waiting.cash=200000;nextDay(waiting);assert.ok(waiting.exchange.routes[0].cargo);
+  const policy={style:'method',skill:0,care:0,wage:1,target:2};
+  H.recruit(ending,policy);nextDay(ending);assert.equal(ending.hr.team.length,0);assert.match(ending.hr.recent[0].result,/일급/);
+  H.recruit(ending,{...policy,wage:500});nextDay(ending);assert.equal(ending.hr.team[0].style,'method');
+  const payroll=H.payroll(ending);assert.equal(nextDay(ending).wages,payroll);
+  assert.equal(ending.hr.team.length,2);assert.equal(ending.hr.open,false);
+  const cap=C.capacity(ending);C.register(ending);assert.equal(C.capacity(ending),cap+8);assert.throws(()=>C.register(ending));
+  ending.cash=2_000_000;const ships=E.fleet(ending);
+  E.trade(ending,'TOW',50,true);E.merge(ending,'TOW',false);E.merge(ending,'POL',true);
+  assert.equal(E.fleet(ending),ships+3);check(ending);
+  console.log('PASS: commodity accounting, mixed cargo, repeat/cancel/resume, liquidity, recruitment and transport acquisitions.');
+}
 {
   const F = runtime.Freight;
   const old = E.newGame();

@@ -11,7 +11,9 @@ window.GameData = (() => {
   const rivals = [
     {id:'HEL',name:'헬리오스 물류',en:'Helios Logistics',color:'#ffae68',icon:'sun',price:1620,weight:32},
     {id:'NVA',name:'노바 다이내믹스',en:'Nova Dynamics',color:'#b491ff',icon:'nova',price:2380,weight:28},
-    {id:'AXM',name:'액시엄 테크',en:'Axiom Tech',color:'#63b3ff',icon:'layers',price:1940,weight:22}
+    {id:'AXM',name:'액시엄 테크',en:'Axiom Tech',color:'#63b3ff',icon:'layers',price:1940,weight:22},
+    {id:'TOW',name:'자오선 예항',en:'Meridian Towing',color:'#a9ccaa',icon:'route',price:980,weight:9,ships:1,specialty:'항만 예인 · 연안 화물선 1척'},
+    {id:'POL',name:'극광 냉장해운',en:'Polar Cold Freight',color:'#92c8ff',icon:'box',price:1380,weight:12,ships:2,specialty:'저온 특산물 운송 · 냉장 화물선 2척'}
   ];
   const techs = [
     {id:'warp',name:'워프 추진기',desc:'레벨당 항로 회전율 +18%',cost:18500,icon:'rocket'},

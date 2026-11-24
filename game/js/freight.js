@@ -19,7 +19,7 @@ window.Freight = (() => {
   }
   function accept(s, id) {
     const job = find(id);
-    if (!job || s.freight) throw Error('현재 수주할 수 없는 계약입니다.');
+    if (!job || s.freight || Commerce.freeShips(s)<1) throw Error('현재 수주할 수 없는 계약입니다.');
     s.freight = {id, start:s.day, warp:s.tech.warp};
     Economy.note(s,'fleet','운송 계약 수주 · '+job.cargo,job.client+' → '+job.to+' · D'+due(s.freight)+' 마감');
   }
@@ -34,7 +34,7 @@ window.Freight = (() => {
   function board(s) {
     const U = UI, order = s.freight;
     const fleet = Economy.fleet(s);
-    let status = U.kv('정기편 운항', (fleet - (order ? 1 : 0))+' / '+fleet+'척');
+    let status = U.kv('정기편 운항', Commerce.freeShips(s)+' / '+fleet+'척');
     if (order) {
       const job = find(order.id);
       status += U.kv('운송 중',job.cargo+' → '+job.to) +
@@ -45,7 +45,7 @@ window.Freight = (() => {
       const days = duration(job,active ? order.warp : s.tech.warp);
       return '<article class="tile"><div class="tile-art">'+PixelArt.thumb(job.art,48)+'</div><h3>'+job.cargo+'</h3><p class="desc">'+job.note+'</p>'+
         U.kv('의뢰인',job.client)+U.kv('인도처',job.to)+U.kv('운송 기간',days+'회 결산')+U.kv('계약 운임',U.money(job.fee))+
-        U.btn(active?'운송 중':order?'배선 대기':'계약 수주','freightAccept',job.id,!!order)+'</article>';
+        U.btn(active?'운송 중':order?'배선 대기':'계약 수주','freightAccept',job.id,!!order||Commerce.freeShips(s)<1)+'</article>';
     });
     return '<p class="screen-intro">계약을 맡으면 정기편 화물선 한 척을 배정합니다. 워프 연구는 운송 기간을 줄이며, 인도일 결산 때 운임 전액이 들어오고 배가 복귀합니다.</p><section class="panel wide-panel"><div class="panel-head"><h2><i class="stripe"></i>배선 현황</h2></div><div class="finance-bars">'+status+'</div></section><div class="cards">'+cards.join('')+'</div>';
   }

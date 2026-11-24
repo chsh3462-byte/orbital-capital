@@ -20,3 +20,9 @@ main{margin-left:188px;padding:29px clamp(17px,2.1vw,36px) 16px;max-width:2200px
 @media(max-width:800px){.guide-offer,.guide-task{flex-wrap:wrap}.guide-actions{flex-shrink:1}.guide-offer .guide-actions{margin-left:auto}}
 @media(max-width:485px){.guide-offer,.guide-main,.guide-task{padding:10px}.guide-offer .dispatch-icon,.guide-main .dispatch-icon{display:none}.guide-offer{display:grid}.guide-offer .guide-actions{margin-left:0}.guide-actions .btn{padding:6px 9px}.guide-copy p,.guide-task p{font-size:.87rem}}
 @media(max-height:700px){.side{overflow-y:auto}.brand{margin-bottom:18px}.side-bottom .side-section{padding-top:12px}}
+.side{overflow-y:auto}
+.field select{min-width:8rem;background:#111c25;color:#deefe9;border:1px solid #40535d;border-radius:4px;padding:7px;font:inherit}
+.cargo-lines{border:1px solid var(--line);display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:4px 14px;padding:10px 14px;margin:12px 0}
+.cargo-lines legend{color:var(--soft);padding:0 5px}
+.cargo-lines .field{justify-content:space-between;margin:2px 0}
+.cargo-lines input{width:4rem}

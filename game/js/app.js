@@ -3,6 +3,7 @@
   const D=GameData,E=Economy,U=UI,P=PixelArt,$=q=>document.querySelector(q);
   let state,page='dashboard',period='day',speed=1,paused=false,clock=0,playTime=0,last=performance.now(),modal=null;
   let saveEnabled=true,toastTimer,animationBatch=0,lastPaint=-1,saveQueue=Promise.resolve(),guideView='';
+  let exchangePort='nereid';
   let venue='market',wheelPick='red',spinEnd=0;
   const spinDuration=2200;
   const dialog=$('#dialog'),workspace=$('#workspace');
@@ -74,7 +75,7 @@
     $('#speed').textContent=speed+'×';$('#map-live').textContent=paused?'일시정지':'실시간';
     if(page==='dashboard'){
       $('#ticker-list').innerHTML=U.tickers(state);$('#fleet').innerHTML=U.fleet(state);$('#logs').innerHTML=U.logs(state.logs.slice(0,4));$('#breakdown').innerHTML=U.bars(state);
-    }else workspace.innerHTML=U[page](state,page==='port'?venue:period);
+    }else workspace.innerHTML=U[page](state,page==='port'?venue:page==='exchange'?exchangePort:period);
     const e=state.event&&D.events.find(e=>e.id===state.event.id);
     let notice=$('#event');if(e){
       if(!notice){notice=document.createElement('div');notice.className='notice';notice.id='event';$('#metrics').after(notice);}
@@ -89,14 +90,21 @@
   async function open(kind,id){
     modal={kind,id};const token=modal;
     let title='',body='';
-    if(kind==='planet'){
+    if(kind==='goodsOrder'){
+      title=Commerce.port(exchangePort).name+' · '+Commerce.byId(id).name;body=ExchangeUI.order(state,exchangePort,id);
+    }else if(kind==='routeSetup'){
+      title='지정 자동 운항';body=ExchangeUI.routeForm(state,exchangePort,id);
+    }else if(kind==='hrSetup'){
+      title='자동 채용 심사 기준';body=ExchangeUI.policy(state);
+    }else if(kind==='planet'){
       title=id==='hq'?'기업 본사':D.planets.find(p=>p.id===id).name+' 거점';body=U.planetDetail(state,id);
     }else if(kind==='stock'){
       title=D.rivals.find(r=>r.id===id).name+' · '+id;body=U.stockDetail(state,id);
     }else if(kind==='reviewFriendly'||kind==='reviewHostile'){
       const hostile=kind==='reviewHostile',r=state.markets.find(r=>r.id===id),cost=E.mergerCost(r,hostile);
       title=hostile?'적대적 인수':'우호적 인수';
-      body='<p class="hint">'+id+'의 잔여 지분을 정산하면 소유 행성과 시설, 시장 점유율을 인계받습니다. 합병과 동시에 주식 거래가 종료됩니다.</p>'+U.kv('잔여 지분',(100-r.shares)+'%')+U.kv('인수 지출',U.money(cost))+U.kv('보유 자금',U.money(state.cash))+'<div class="action-row">'+U.btn('인수 확정',hostile?'hostile':'friendly',id,state.cash<cost)+U.btn('거래로 돌아가기','stock',id,false,false)+'</div>';
+      const vessels=D.rivals.find(d=>d.id===id).ships||0;
+      body='<p class="hint">'+id+'의 잔여 지분을 정산하면 소유 행성과 시설, 시장 점유율을 인계받습니다.'+(vessels?' 운송 화물선 '+vessels+'척을 함대에 편입합니다.':'')+' 합병과 동시에 주식 거래가 종료됩니다.</p>'+U.kv('잔여 지분',(100-r.shares)+'%')+U.kv('인수 지출',U.money(cost))+U.kv('보유 자금',U.money(state.cash))+'<div class="action-row">'+U.btn('인수 확정',hostile?'hostile':'friendly',id,state.cash<cost)+U.btn('거래로 돌아가기','stock',id,false,false)+'</div>';
     }else if(kind==='luxItem'){
       title=Leisure.get(id).name;body=Freeport.itemView(state,id,page==='lounge'?'lounge':venue);
     }else if(kind==='casino'){
@@ -127,6 +135,7 @@
     ][g.step];
     if(related){if(g.step!==5)inspected();body+=Tutorial.dialogNote(state);}
     $('#dialog-title').textContent=title;$('#dialog-body').innerHTML=body;
+    if(kind==='goodsOrder'||kind==='routeSetup')ExchangeUI.updateQuote(state,exchangePort,id,document);
     dialog.classList.toggle('wheel-dialog',kind==='casino');
     if(!dialog.open)dialog.showModal();animationBatch=0;
   }
@@ -154,6 +163,20 @@
           }
           g.step=Math.max(0,g.step+(a==='guideNext'?1:-1));g.seen=false;visitChapter();return;
         }
+        case 'exchangePort':case 'openMarket':if(Commerce.port(id)){exchangePort=id;nav('exchange');}return;
+        case 'goodsOrder':case 'routeSetup':case 'hrSetup':await open(a,id);return;
+        case 'goodsBuy':case 'goodsSell':
+          Commerce.trade(state,exchangePort,id,$('#goodsQty').valueAsNumber,a==='goodsBuy');
+          dialog.close();modal=null;break;
+        case 'registerCarrier':Commerce.register(state);break;
+        case 'routeStart':
+          Commerce.schedule(state,$('#routeFrom').value,$('#routeTo').value,ExchangeUI.readLines(document));
+          dialog.close();modal=null;break;
+        case 'routeCancel':Commerce.cancel(state,Number(id));break;
+        case 'hrApply':
+          Staff.recruit(state,{style:$('#hrStyle').value,skill:$('#hrSkill').valueAsNumber,care:$('#hrCare').valueAsNumber,wage:$('#hrWage').valueAsNumber,target:$('#hrTarget').valueAsNumber});
+          dialog.close();modal=null;break;
+        case 'hrStop':state.hr.open=false;changed('모집을 중지했습니다.');return;
         case 'freightAccept':Freight.accept(state,id);changed('화물선 한 척을 계약 항로에 배정했습니다.');return;
         case 'pause':paused=!paused;render();return;
         case 'speed':speed=speed===4?1:speed*2;render();return;
@@ -204,6 +227,7 @@
     }catch(err){error(err.message||'작업을 완료할 수 없습니다.');}
   });
   document.addEventListener('input',e=>{
+    if(modal?.kind==='goodsOrder'||modal?.kind==='routeSetup')ExchangeUI.updateQuote(state,exchangePort,modal.id,document);
     if(e.target.id==='qty'&&modal?.kind==='stock'){
       const q=e.target.valueAsNumber,r=state.markets.find(r=>r.id===modal.id);
       $('#order-cost').textContent=Number.isInteger(q)&&q>=1&&q<=100?U.money(q*r.price):'—';

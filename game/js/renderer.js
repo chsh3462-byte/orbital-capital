@@ -98,7 +98,13 @@ window.PixelArt=(()=>{
         if(!isHQ&&state.buildings.length>1)sprite(ctx,state.buildings.at(-1),a.x+width*.43,a.y-3,16*this.zoom,t);
       }
       if(s.ads.length)sprite(ctx,'hologram',home.x+47*this.zoom,home.y-14,28*this.zoom,t);
-      for(let i=0;i<Economy.fleet(s);i++){
+      for(const r of s.exchange.routes){
+        const start=this.point(Commerce.port(r.from)),end=this.point(Commerce.port(r.to));
+        if(this.routes){ctx.strokeStyle='#f0b876';ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(start.x,start.y);ctx.lineTo(end.x,end.y);ctx.stroke();ctx.setLineDash([]);}
+        const progress=r.cargo?(s.tick+.5)/4:0;
+        sprite(ctx,'ship'+Economy.tier(s),start.x+(end.x-start.x)*progress,start.y+(end.y-start.y)*progress-9,24*this.zoom,t,Math.atan2(end.y-start.y,end.x-start.x));
+      }
+      for(let i=0;i<Economy.fleet(s)-s.exchange.routes.length;i++){
         const route=routes[(i*2+Math.floor(i/3))%routes.length],phase=(this.transit/(14+i*2)+.21+i*.23)%2;
         const forward=phase<1,u=forward?phase:2-phase,a=route(u),b=route(u+.012);
         const angle=Math.atan2(b.y-a.y,b.x-a.x)+(forward?0:Math.PI);

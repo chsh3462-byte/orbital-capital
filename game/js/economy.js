@@ -13,7 +13,7 @@ window.Economy = (() => {
     const s={version:1,day:1,tick:0,cash:82000,seed:179839,rep:58,realized:0,expenses:{research:0,marketing:0},tech:{warp:0,cargo:0,core:0,ai:0,shield:0},ads:[],event:null,
       planets:D.planets.map(p=>({id:p.id,owner:p.owner,buildings:p.owner?['spaceport']:[]})),
       markets:D.rivals.map(r=>({id:r.id,price:r.price,prev:r.price,history:[r.price],shares:0,basis:0,acquired:false,weight:r.weight})),
-      guide:Tutorial.initial(),leisure:Leisure.initial(),history:[],quarters:[],mergers:[],logs:[]};
+      freight:null,guide:Tutorial.initial(),leisure:Leisure.initial(),history:[],quarters:[],mergers:[],logs:[]};
     // The company starts with ten settled operating days and an observed price history.
     for(let i=0;i<10;i++){for(let j=0;j<4;j++) quote(s); settle(s,false);}
     quote(s);s.tick=1;
@@ -41,25 +41,27 @@ window.Economy = (() => {
     const owned=s.planets.filter(p=>p.owner==='player');
     const mult=1+s.ads.reduce((a,b)=>a+D.campaigns.find(c=>c.id===b.id).boost,0);
     const demand=s.markets.reduce((a,r)=>a+r.price/D.rivals.find(d=>d.id===r.id).price,0)/s.markets.length;
-    const trade=Math.round(fleet(s)*910*Math.max(.8,Math.min(1.2,demand))*(1+s.tech.warp*.18)*(1+s.tech.cargo*.22)*(s.event?.id==='boom'?1.35:1)*mult);
+    const trade=Math.round((fleet(s)-(s.freight?1:0))*910*Math.max(.8,Math.min(1.2,demand))*(1+s.tech.warp*.18)*(1+s.tech.cargo*.22)*(s.event?.id==='boom'?1.35:1)*mult);
     const facility=Math.round(owned.flatMap(p=>p.buildings).reduce((a,id)=>a+D.facilities.find(f=>f.id===id).income,0)*(1+s.tech.core*.25)*(s.event?.id==='breakthrough'?1.30:1)*mult);
     const dividend=s.markets.reduce((a,r)=>a+(r.acquired?0:Math.floor(r.shares*r.price*.002)),0);
     const fleetCost=fleet(s)*310,landCost=owned.reduce((a,p)=>a+200+210*p.buildings.length,0);
     const risk=s.event?.id==='risk'?Math.round(trade*.4*(1-s.tech.shield*.25)):0;
     const {research,marketing}=s.expenses;
-    const revenue=trade+facility+dividend,cost=fleetCost+landCost+risk+research+marketing;
-    return {trade,facility,dividend,fleetCost,landCost,risk,research,marketing,revenue,cost,net:revenue-cost};
+    const contract=Freight.payment(s);
+    const revenue=trade+facility+dividend+contract,cost=fleetCost+landCost+risk+research+marketing;
+    return {trade,contract,facility,dividend,fleetCost,landCost,risk,research,marketing,revenue,cost,net:revenue-cost};
   }
   function settle(s,live=true){
     const f=forecast(s);
     // The R&D and advertising invoices have already reduced cash at purchase.
     s.cash+=f.net+f.research+f.marketing;s.expenses={research:0,marketing:0};
+    if(f.contract)Freight.complete(s);
     if(s.day%4===0&&s.rep<78)s.rep++;
     const row={day:s.day,...f,cash:s.cash,share:weights(s).player,rep:rep(s)};
     s.history.push(row);if(s.history.length>180)s.history.shift();
     if(s.day%90===0){
       const rows=s.history.slice(-90);
-      const totals=Object.fromEntries(['revenue','trade','facility','dividend','cost','net','fleetCost','landCost','risk','research','marketing'].map(k=>[k,sum(rows,k)]));
+      const totals=Object.fromEntries(['revenue','trade','contract','facility','dividend','cost','net','fleetCost','landCost','risk','research','marketing'].map(k=>[k,sum(rows,k)]));
       s.quarters.push({q:s.day/90,...totals,share:row.share,rep:row.rep});
       note(s,'finance','분기 결산 완료','Q'+s.day/90);
     }

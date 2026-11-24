@@ -8,6 +8,8 @@
 
 진행 상황은 플레이한 브라우저에 저장됩니다. 같은 기기의 같은 브라우저에서 위 주소를 다시 열면 이어서 플레이할 수 있습니다.
 
+**v0.2.0**에서 왼쪽 **항만 운송 계약**을 열면 정기편 화물선 한 척을 지정 운송에 배정할 수 있습니다. [업데이트 전후 비교와 운임표](CHANGELOG.md)
+
 [Windows x64 배포본 다운로드](https://github.com/chsh3462-byte/orbital-capital/releases/latest/download/OrbitalCapital-Windows-x64.zip) · [버전별 릴리스](https://github.com/chsh3462-byte/orbital-capital/releases)
 
 ZIP 전체를 압축 해제한 뒤 `OrbitalCapital-win-x64` 폴더에서 `OrbitalCapital.exe`를 실행하세요.

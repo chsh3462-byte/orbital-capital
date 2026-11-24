@@ -24,7 +24,7 @@ window.UI=(()=>{
     shield:'<path d="m12 2 9 4v5q0 7-9 11-9-4-9-11V6zM8 12l3 3 5-6"/>'
   };
   const icon=k=>'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">'+(paths[k]||paths.grid)+'</svg>';
-  const nav={dashboard:['경영 관제실','COMMAND CENTER','grid'],finance:['재무제표','FINANCIAL REPORTS','finance'],stocks:['증권 · 인수합병','GALACTIC EXCHANGE','chart'],research:['함대 연구소','FLEET RESEARCH','rocket'],estate:['행성 개발','PLANETARY ESTATES','planet'],ads:['마케팅','MARKETING','ad'],port:['자오선 자유항','MERIDIAN FREEPORT','planet'],lounge:['개인 라운지','PRIVATE LOUNGE','star']};
+  const nav={dashboard:['경영 관제실','COMMAND CENTER','grid'],freight:['항만 운송 계약','FREIGHT CONTRACTS','box'],finance:['재무제표','FINANCIAL REPORTS','finance'],stocks:['증권 · 인수합병','GALACTIC EXCHANGE','chart'],research:['함대 연구소','FLEET RESEARCH','rocket'],estate:['행성 개발','PLANETARY ESTATES','planet'],ads:['마케팅','MARKETING','ad'],port:['자오선 자유항','MERIDIAN FREEPORT','planet'],lounge:['개인 라운지','PRIVATE LOUNGE','star']};
   const fmt=n=>Math.round(n).toLocaleString('ko-KR'),money=n=>fmt(n)+' CR',esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function date(day){const d=new Date(Date.UTC(2186,0,day));return [d.getUTCFullYear(),d.getUTCMonth()+1,d.getUTCDate()].map((n,i)=>i?String(n).padStart(2,'0'):n).join('.');}
   function spark(values,color){
@@ -54,7 +54,7 @@ window.UI=(()=>{
       return '<button class="ticker" data-act="stock" data-id="'+r.id+'"><span class="emblem" style="--c:'+d.color+'">'+icon(d.icon)+'</span><div><b class="ticker-id">'+r.id+'</b><small>'+d.name+'</small></div>'+spark(r.history.slice(-20),color)+'<div class="ticker-price">'+fmt(r.price)+'<small class="'+(v<0?'neg':'pos')+'">'+(r.acquired?'상장 폐지':(v<0?'−':'+')+Math.abs(v).toFixed(2)+'%')+'</small></div></button>';
     }).join('');
   }
-  function fleet(s){const k='ship'+E.tier(s);return '<div class="fleet-art">'+thumb(k,48)+thumb(k,48)+thumb(k,48)+'</div><div class="fleet-row"><span>자동 운항 <b>'+E.fleet(s)+'척</b></span><span>선체 <b>MK.'+['I','II','III'][E.tier(s)-1]+'</b></span></div>';}
+  function fleet(s){const k='ship'+E.tier(s);return '<div class="fleet-art">'+thumb(k,48)+thumb(k,48)+thumb(k,48)+'</div><div class="fleet-row"><span>정기편 <b>'+(E.fleet(s)-(s.freight?1:0))+'척'+(s.freight?' · 계약 1척':'')+'</b></span><span>선체 <b>MK.'+['I','II','III'][E.tier(s)-1]+'</b></span></div>';}
   const logColors={system:'#7cb6f3',fleet:'#8dbef2',finance:'#73e4c7',research:'#ad9bf0',event:'#efad76',market:'#e9bd76',land:'#9fd3a2',marketing:'#cc91bf'};
   function logs(rows){return rows.map(r=>'<div class="log-row"><time>D'+String(r.day).padStart(3,'0')+'</time><i class="event-dot" style="--c:'+(logColors[r.type]||'#73e4c7')+'"></i><strong>'+esc(r.title)+'</strong><span class="detail">'+esc(r.detail)+'</span></div>').join('');}
   function bars(s){
@@ -65,13 +65,13 @@ window.UI=(()=>{
   function table(head,rows){return '<div class="table-wrap"><table><thead><tr>'+head.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(x=>'<td>'+x+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';}
   function finance(s,period){
     const f=E.forecast(s),quarter=period==='quarter',from=(Math.ceil(s.day/90)-1)*90+1,part=s.history.filter(r=>r.day>=from);
-    const keys=['revenue','cost','net','trade','facility','dividend','fleetCost','landCost','risk','marketing','research'];
+    const keys=['revenue','cost','net','trade','contract','facility','dividend','fleetCost','landCost','risk','marketing','research'];
     const partial={...Object.fromEntries(keys.map(k=>[k,E.sum(part,k)])),label:'Q'+Math.ceil(s.day/90)+' · 진행 중',rep:part.at(-1)?.rep??E.rep(s),share:part.at(-1)?.share??E.weights(s).player};
     const rows=quarter?[partial,...s.quarters.slice().reverse().map(q=>({...q,label:'Q'+q.q}))]:s.history.slice().reverse().map(r=>({...r,label:date(r.day)}));
     const val=(r,k)=>r[k]===undefined?'—':money(r[k]);
-    const totals=rows.map(r=>[r.label,r.trade===undefined?'—':money(r.trade+r.facility),val(r,'dividend'),val(r,'cost'),val(r,'net'),r.rep??'—',r.share===undefined?'—':r.share.toFixed(1)+'%']);
+    const totals=rows.map(r=>[r.label,r.trade===undefined?'—':money(r.trade+r.facility+(r.contract??0)),money(r.contract??0),val(r,'dividend'),val(r,'cost'),val(r,'net'),r.rep??'—',r.share===undefined?'—':r.share.toFixed(1)+'%']);
     const costs=rows.map(r=>[r.label,...['fleetCost','landCost','risk','research','marketing'].map(k=>val(r,k))]);
-    return '<div class="toolbar"><div><h2>영업 실적</h2><p>예상 일일 순이익 '+money(f.net)+' · 90일마다 분기 결산</p></div><div class="action-row"><button class="tab '+(!quarter?'active':'')+'" data-act="daily">일일</button><button class="tab '+(quarter?'active':'')+'" data-act="quarter">분기</button></div></div><section class="panel">'+table([quarter?'분기':'결산일','총매출','배당금','총비용','순이익','평판','점유율'],totals)+'</section>'+panel('비용 명세',table([quarter?'분기':'결산일','함대 유지비','행성 유지비','사고 손실','연구비','광고비'],costs));
+    return '<div class="toolbar"><div><h2>영업 실적</h2><p>예상 일일 순이익 '+money(f.net)+' · 90일마다 분기 결산</p></div><div class="action-row"><button class="tab '+(!quarter?'active':'')+'" data-act="daily">일일</button><button class="tab '+(quarter?'active':'')+'" data-act="quarter">분기</button></div></div><section class="panel">'+table([quarter?'분기':'결산일','총매출','그중 계약 운임','배당금','총비용','순이익','평판','점유율'],totals)+'</section>'+panel('비용 명세',table([quarter?'분기':'결산일','함대 유지비','행성 유지비','사고 손실','연구비','광고비'],costs));
   }
   function research(s){return '<p class="screen-intro">각 기술은 3단계까지 연구할 수 있습니다. 총 연구 레벨 3과 6에서 함선 외형과 추진기가 진화합니다.</p><div class="cards">'+D.techs.map(t=>{
     const lv=s.tech[t.id],cost=E.researchCost(s,t.id);
@@ -106,5 +106,5 @@ window.UI=(()=>{
     if(r.acquired)return '<p class="hint">'+d.name+'의 합병이 완료되었습니다.</p>';
     return '<div class="chart-box">'+spark(r.history,d.color)+'</div>'+kv('현재 주가',money(r.price))+kv('보유 지분',r.shares+'% · '+r.shares+' / 100주')+kv('일일 예상 배당',money(Math.floor(r.shares*r.price*.002)))+'<label class="field">거래 수량 <input id="qty" type="number" min="1" max="100" step="1" value="1"> 주</label>'+kv('주문 금액','<span id="order-cost">'+money(r.price)+'</span>')+'<div class="action-row">'+btn('매수','buy',id)+btn('매도','sell',id,!r.shares,false)+'</div><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><h3>기업 인수합병</h3><p class="hint">우호적 인수는 지분 50% 이상에서 가능합니다. 적대적 인수는 잔여 주식에 프리미엄 30%를 지불합니다.</p><div class="action-row">'+btn('우호적 인수 검토','reviewFriendly',id,r.shares<50,false)+btn('적대적 인수 검토','reviewHostile',id,false,false)+'</div>';
   }
-  return {nav,icon,fmt,money,esc,date,kv,btn,metrics,tickers,fleet,logs,bars,finance,research,ads,estate,stocks,port:Freeport.port,lounge:Freeport.lounge,planetDetail,stockDetail};
+  return {nav,icon,fmt,money,esc,date,kv,btn,metrics,tickers,fleet,logs,bars,freight:Freight.board,finance,research,ads,estate,stocks,port:Freeport.port,lounge:Freeport.lounge,planetDetail,stockDetail};
 })();

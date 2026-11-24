@@ -6,12 +6,45 @@ const path = require('node:path');
 const vm = require('node:vm');
 const runtime = vm.createContext({});
 runtime.window = runtime;
-for (const file of ['data', 'tutorial', 'roulette', 'registry', 'salon', 'freeport', 'leisure', 'economy', 'storage']) {
+for (const file of ['data', 'tutorial', 'roulette', 'registry', 'salon', 'freeport', 'leisure', 'freight', 'economy', 'storage']) {
   const source = fs.readFileSync(path.join(__dirname, '../game/js', file + '.js'), 'utf8');
   vm.runInContext(source, runtime, {filename:file + '.js'});
 }
 const E = runtime.Economy, check = runtime.LocalSave.validate;
 const clone = state => check(JSON.parse(JSON.stringify(state)));
+{
+  const F = runtime.Freight;
+  const old = E.newGame();
+  delete old.freight;
+  old.history.forEach(row => delete row.contract);
+  const s = clone(old);
+  assert.equal(s.freight, null);
+  // Start just before the end of the quarter and resume from a mid-voyage save.
+  while (s.day < 89) E.step(s);
+  const regular = E.forecast(s);
+  F.accept(s, 'tea');
+  assert.ok(E.forecast(s).trade < regular.trade);
+  assert.equal(E.forecast(s).fleetCost, regular.fleetCost);
+  assert.throws(() => F.accept(s, 'clock'));
+  assert.equal(F.payment(s), 0);
+  E.research(s, 'warp');
+  while (s.day < 90) E.step(s);
+  const resumed = clone(s);
+  assert.equal(F.payment(resumed), 6000);
+  assert.throws(() => clone({...resumed, freight:{id:'tea', start:70, warp:0}}));
+  let cash = resumed.cash;
+  while (resumed.day < 91) E.step(resumed);
+  const row = resumed.history.at(-1);
+  assert.equal(row.contract, 6000);
+  assert.equal(row.revenue, row.trade + row.contract + row.dividend + row.facility);
+  assert.equal(resumed.cash, cash + row.net);
+  assert.equal(resumed.quarters.at(-1).contract, 6000);
+  assert.equal(resumed.freight, null);
+  assert.equal(E.forecast(resumed).contract, 0);
+  F.accept(resumed, 'tea');
+  assert.equal(F.payment(resumed), 6000); // New contract uses upgraded engines.
+  console.log('PASS: freight allocation, old save, voyage resume, warp terms, single payment and quarter close.');
+}
 const game = E.newGame();
 game.cash = 1_000_000;
 const before = game.cash;

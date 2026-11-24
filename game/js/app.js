@@ -154,6 +154,7 @@
           }
           g.step=Math.max(0,g.step+(a==='guideNext'?1:-1));g.seen=false;visitChapter();return;
         }
+        case 'freightAccept':Freight.accept(state,id);changed('화물선 한 척을 계약 항로에 배정했습니다.');return;
         case 'pause':paused=!paused;render();return;
         case 'speed':speed=speed===4?1:speed*2;render();return;
         case 'close':dialog.close();return;

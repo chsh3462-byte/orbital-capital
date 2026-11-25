@@ -128,7 +128,7 @@
       title=Leisure.get(id.split('/')[0]).name+' · 전용 유람 비행';body=Leisure.cruiseView(state,id);
     }else if(kind==='guideWarp'||kind==='guideAd'){
       title=kind==='guideWarp'?'기관실 · 워프 추진기 견적':'영업팀 · 홀로넷 광고 시안';body=Tutorial.preview(state,kind);
-    }else if(kind==='logs'){title='운영 기록';body=U.logs(state.logs);}
+    }else if(kind==='logs'){title='전체 기록';body=Records.view(state,id);}
     else if(kind==='loads'){
       title='로컬 데이터 불러오기';body='<p class="hint">불러올 시점을 선택하세요. 적용하면 현재 진행 상태가 선택한 기록으로 바뀝니다.</p>';
       for(const slot of ['manual','auto']){
@@ -159,6 +159,10 @@
     const a=b.dataset.act,id=b.dataset.id;
     try{
       switch(a){
+        case 'recordSection':
+          await open('logs',id);
+          dialog.querySelector('[data-act="recordSection"][aria-pressed="true"]').focus({preventScroll:true});
+          return;
         case 'guideStart':{
           const g=state.guide;
           if(g.status==='done'){g.step=0;g.seen=false;}

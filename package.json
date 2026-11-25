@@ -1,7 +1,7 @@
 {
   "name": "orbital-capital",
   "productName": "Orbital Capital",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "description": "오프라인 우주 기업 경영 시뮬레이션",
   "main": "desktop/main.cjs",

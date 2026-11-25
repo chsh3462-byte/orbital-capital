@@ -26,3 +26,10 @@ main{margin-left:188px;padding:29px clamp(17px,2.1vw,36px) 16px;max-width:2200px
 .cargo-lines legend{color:var(--soft);padding:0 5px}
 .cargo-lines .field{justify-content:space-between;margin:2px 0}
 .cargo-lines input{width:4rem}
+.record-controls{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.release-record{border-top:1px solid var(--line);font-size:.9rem}
+.release-record summary{cursor:pointer;padding:12px 0;line-height:1.55;font-weight:600}
+.release-record time,.release-record code{color:var(--soft);font:11px var(--mono);margin-left:8px;white-space:nowrap}
+.release-record>div{padding:0 6px 14px 16px;line-height:1.65;color:#c9d4dc}
+.release-record ul{padding-left:17px;margin:0}.release-record li+li,.release-record section+section{margin-top:6px}
+.release-record h4,.release-record p{margin:0}

@@ -25,7 +25,7 @@ window.Registry=(()=>{
   };
   const routes=['lyra','nereid','orion','veyra','eir','thalos'];
   Object.assign(ships,Collection.ships);
-  const ports=id=>routes.slice(0,ships[id][0]+2);
+  const ports=id=>ships[id][0]===4?[...routes,'mira','serein','calyx']:routes.slice(0,ships[id][0]+2);
   const gradeName=id=>['Ⅰ','Ⅱ','Ⅲ','Ⅳ'][ships[id][0]-1]+' · '+grades[ships[id][0]-1];
   return {additions:additions.concat(Collection.items),grades,ships,ports,gradeName};
 })();

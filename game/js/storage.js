@@ -15,6 +15,16 @@ window.LocalSave = (() => {
           if(!s.markets.some(r=>r.id===d.id))s.markets.push({id:d.id,price:d.price,prev:d.price,history:[d.price],shares:0,basis:0,acquired:false,weight:d.weight});
         }
       }
+      if(s.version===1&&s.frontier===undefined){
+        for(const d of D.rivals.filter(r=>['LUX','SEL','ARC'].includes(r.id))){
+          if(!s.markets.some(r=>r.id===d.id))s.markets.push({id:d.id,price:d.price,prev:d.price,history:[d.price],shares:0,basis:0,acquired:false,weight:d.weight});
+        }
+        for(const p of D.planets.filter(p=>['mira','serein','calyx'].includes(p.id))){
+          if(!s.planets.some(r=>r.id===p.id))s.planets.push({id:p.id,owner:p.owner,buildings:p.owner?['spaceport']:[]});
+        }
+        s.frontier=1;s.security=Escort.initial();s.dealSerial=0;
+        for(const r of s.exchange.routes){r.grade=1;r.guard=0;}
+      }
       if(s.version===1&&s.hr===undefined)s.hr=Staff.initial();
       if(s.version===1&&s.freight===undefined)s.freight=null;
       if(s.version===1&&s.expenses===undefined)s.expenses={research:0,marketing:0};
@@ -23,6 +33,8 @@ window.LocalSave = (() => {
       if(s.version===1&&s.leisure){
         const oldFour=s.leisure.tables===undefined;
         Leisure.migrate(s.leisure);
+        const lot=s.leisure.auction?.lot;
+        if(lot&&lot.stage===undefined)Freeport.prepare(lot);
         // A collector who finished the old catalog can receive the new consignments.
         if(s.leisure.auction?.invited&&s.leisure.auction.lot===null){
           const last=oldFour?'echo':'bell';
@@ -32,7 +44,7 @@ window.LocalSave = (() => {
         }
       }
       const valid=s.version===1&&integer(s.day,1)&&integer(s.tick,0,3)&&integer(s.cash)&&integer(s.seed,0,4294967295)&&finite(s.rep,0,100)&&Number.isSafeInteger(s.realized)
-        &&Staff.valid(s.hr)&&Commerce.valid(s.exchange)&&Commerce.freeShips(s)>=0&&Freight.valid(s.freight,s.day)&&integer(s.expenses.research)&&integer(s.expenses.marketing)&&Tutorial.valid(s.guide)&&Leisure.valid(s.leisure)
+        &&s.frontier===1&&integer(s.dealSerial)&&Escort.valid(s)&&Staff.valid(s.hr)&&Commerce.valid(s.exchange)&&Commerce.freeShips(s)>=0&&Freight.valid(s.freight,s.day)&&integer(s.expenses.research)&&integer(s.expenses.marketing)&&Tutorial.valid(s.guide)&&Leisure.valid(s.leisure)
         &&Object.keys(s.tech).length===D.techs.length&&D.techs.every(t=>integer(s.tech[t.id],0,3))
         &&items(s.ads,a=>D.campaigns.some(c=>c.id===a.id&&integer(a.left,1,c.days)),3)&&unique(s.ads,a=>a.id)
         &&(s.event===null||D.events.some(e=>e.id===s.event.id&&integer(s.event.left,1,e.days)))

@@ -57,14 +57,16 @@ window.Leisure = (() => {
     const r=l.last;
     return !!r&&Object.hasOwn(bets,r.pick)&&[r.a,r.b].every(v=>Number.isInteger(v)&&v>=1&&v<=6)&&r.payout===award(r.a,r.b,r.pick)&&r.payout<=l.paidOut;
   }
-  function purchase(s,id,venue){
+  function purchase(s,id,venue,invoice){
     const item=get(id);
     if(!item||s.leisure.owned.includes(id))throw Error('이미 소장했거나 판매 목록에 없는 물품입니다.');
     if(source(item)==='auction')throw Error('아티팩트 소유권은 비밀 경매에서 낙찰받아야 합니다.');
     if(source(item)!==venue)throw Error('해당 전시장을 방문하세요.');
-    Economy.charge(s,item.price);
+    const total=invoice??item.price;
+    if(!Number.isSafeInteger(total)||total<1)throw Error('인수 금액을 확인하세요.');
+    Economy.charge(s,total);
     s.leisure.owned.push(id);
-    Economy.note(s,'leisure',item.name+' 소장','−'+UIAmount(item.price)+' CR');
+    Economy.note(s,'leisure',item.name+' 소장','−'+UIAmount(total)+' CR');
   }
   function display(s,id){
     if(!s.leisure.owned.includes(id))throw Error('소장품만 전시할 수 있습니다.');
@@ -76,7 +78,7 @@ window.Leisure = (() => {
     s.leisure.worn=s.leisure.worn===id?null:id;
   }
   function UIAmount(n){return n.toLocaleString('ko-KR');}
-  const destinations={lyra:'라이라의 고리 그늘',nereid:'네레이드의 새벽 해안',orion:'오리온의 보랏빛 구름',veyra:'베이라의 홍토 협곡',eir:'에이르의 빙설 경계',thalos:'탈로스의 심해 궤도'};
+  const destinations={lyra:'라이라의 고리 그늘',nereid:'네레이드의 새벽 해안',orion:'오리온의 보랏빛 구름',veyra:'베이라의 홍토 협곡',eir:'에이르의 빙설 경계',thalos:'탈로스의 심해 궤도',mira:'미라의 등광 계곡',serein:'세린의 진주 염전',calyx:'칼릭스의 수관 지대'};
   function cruiseView(s,id){
     const [ship,port]=id.split('/');
     const item=get(ship);

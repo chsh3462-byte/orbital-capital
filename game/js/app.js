@@ -3,7 +3,7 @@
   const D=GameData,E=Economy,U=UI,P=PixelArt,$=q=>document.querySelector(q);
   let state,page='dashboard',period='day',speed=1,paused=false,clock=0,playTime=0,last=performance.now(),modal=null;
   let saveEnabled=true,toastTimer,animationBatch=0,lastPaint=-1,saveQueue=Promise.resolve(),guideView='';
-  let exchangePort='nereid';
+  let exchangePort='nereid',dealRequest=null;
   let venue='market',wheelPick='red',spinEnd=0;
   const shelves=Object.fromEntries(['market','hangar','auction','lounge'].map(key=>[key,{page:0,desc:false,filter:'all'}]));
   const currentShelf=()=>shelves[page==='lounge'?'lounge':venue];
@@ -94,7 +94,14 @@
   async function open(kind,id){
     modal={kind,id};const token=modal;
     let title='',body='';
-    if(kind==='goodsOrder'){
+    if(kind==='collectChoices'){
+      title=Leisure.get(id).name+' · 인수 조건';body=Bargains.collectorView(state,id,venue);
+    }else if(kind==='dealChoices'){
+      const q=dealRequest;
+      title=(q.buy?'매입':'매각')+' 조건 선택';body=Bargains.view(state,q.place,q.good,q.qty,q.buy);
+    }else if(kind==='guardSetup'){
+      title='지정 항로 경호 배정';body=ExchangeUI.guardForm(state,id);
+    }else if(kind==='goodsOrder'){
       title=Commerce.port(exchangePort).name+' · '+Commerce.byId(id).name;body=ExchangeUI.order(state,exchangePort,id);
     }else if(kind==='routeSetup'){
       title='지정 자동 운항';body=ExchangeUI.routeForm(state,exchangePort,id);
@@ -116,7 +123,7 @@
     }else if(kind==='salon'){
       title='황혼선 · '+Salon.names[id];body=Salon.table(state,id);
     }else if(kind==='auctionBid'){
-      title=Leisure.get(id).name+' · 봉인 입찰';body=Freeport.bidView(state);
+      title=Leisure.get(id).name+' · 호가 경매';body=Freeport.bidView(state);
     }else if(kind==='cruise'){
       title=Leisure.get(id.split('/')[0]).name+' · 전용 유람 비행';body=Leisure.cruiseView(state,id);
     }else if(kind==='guideWarp'||kind==='guideAd'){
@@ -168,13 +175,23 @@
           g.step=Math.max(0,g.step+(a==='guideNext'?1:-1));g.seen=false;visitChapter();return;
         }
         case 'exchangePort':case 'openMarket':if(Commerce.port(id)){exchangePort=id;nav('exchange');}return;
-        case 'goodsOrder':case 'routeSetup':case 'hrSetup':await open(a,id);return;
-        case 'goodsBuy':case 'goodsSell':
-          Commerce.trade(state,exchangePort,id,$('#goodsQty').valueAsNumber,a==='goodsBuy');
-          dialog.close();modal=null;break;
+        case 'goodsOrder':case 'routeSetup':case 'hrSetup':case 'guardSetup':await open(a,id);return;
+        case 'goodsBuy':case 'goodsSell':{
+          const qty=$('#goodsQty').valueAsNumber,buy=a==='goodsBuy';
+          if(!Number.isInteger(qty)||qty<1||qty>1000)throw Error('1~1,000상자를 입력하세요.');
+          dealRequest={place:exchangePort,good:id,qty,buy};await open('dealChoices',id);return;
+        }
+        case 'dealAccept':{
+          if(modal?.kind!=='dealChoices'||!dealRequest)return;
+          const q=dealRequest;Bargains.deal(state,q.place,q.good,q.qty,q.buy,Number(id));
+          dealRequest=null;dialog.close();modal=null;break;
+        }
+        case 'guardHire':Escort.hire(state,Number(id));break;
+        case 'guardRelease':Escort.release(state,Number(id));changed('대기 경호 계약을 해약했습니다.');return;
+        case 'guardAssign':Escort.assign(state,state.exchange.routes.find(r=>r.id===Number(id)),Number($('#routeGuard').value));dialog.close();modal=null;changed('경호 배정을 변경했습니다.');return;
         case 'registerCarrier':Commerce.register(state);break;
         case 'routeStart':
-          Commerce.schedule(state,$('#routeFrom').value,$('#routeTo').value,ExchangeUI.readLines(document));
+          Commerce.schedule(state,$('#routeFrom').value,$('#routeTo').value,ExchangeUI.readLines(document),Number($('#routeGrade').value),Number($('#routeGuard').value));
           dialog.close();modal=null;break;
         case 'routeCancel':Commerce.cancel(state,Number(id));break;
         case 'hrApply':
@@ -203,11 +220,19 @@
         case 'shelfFilter':currentShelf().filter=id;currentShelf().page=0;render();return;
         case 'auctionEnter':if(page==='port'&&venue==='auction'){Freeport.invite(state);render();auto();}return;
         case 'auctionBid':if(page==='port'&&venue==='auction'&&state.leisure.auction.lot?.id===id)await open(a,id);return;
-        case 'submitBid':
-          Freeport.bid(state,id,$('#auction-offer').valueAsNumber);dialog.close();modal=null;changed('봉인 입찰을 접수했습니다. 개찰일에 결과가 기록됩니다.');return;
+        case 'startAuction':Freeport.start(state,id,$('#auction-offer').valueAsNumber);changed('경매를 열었습니다.');return;
+        case 'submitBid':Freeport.bid(state,id,$('#auction-offer').valueAsNumber);changed('호가를 제출했습니다.');return;
+        case 'auctionRound':
+          Freeport.round(state,id);
+          if(state.leisure.auction.lot?.id!==id){dialog.close();modal=null;}
+          changed('호가를 진행했습니다.');return;
         case 'casino':if(page==='port'&&venue==='casino')await open(a,id);return;
         case 'luxItem':case 'cruise':await open(a,id);return;
-        case 'luxBuy':Leisure.purchase(state,id,page==='port'?venue:null);break;
+        case 'luxBuy':if(page==='port')await open('collectChoices',id);return;
+        case 'collectDeal':{
+          if(modal?.kind!=='collectChoices')return;
+          const itemId=modal.id;Bargains.collect(state,itemId,venue,Number(id));await open('luxItem',itemId);changed('소장품을 인도받았습니다.');return;
+        }
         case 'luxDisplay':Leisure.display(state,id);changed('전시 배치를 변경했습니다.');return;
         case 'luxWear':Leisure.wear(state,id);changed('대표 프로필을 갱신했습니다.');return;
         case 'salon':if(page==='port'&&venue==='casino'&&Object.hasOwn(Salon.names,id))await open(a,id);return;

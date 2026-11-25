@@ -7,7 +7,10 @@ window.Commerce = (() => {
     {id:'glass', name:'별고리 광학유리', origin:'lyra', hub:'orion', base:480, art:'luxTideglass', use:'오리온 측량원의 관측 렌즈용 유리'},
     {id:'sensor', name:'항법 소자', origin:'orion', hub:'thalos', base:620, art:'chip', use:'탈로스 조선소에서 항법기에 넣는 정밀 부품'},
     {id:'gear', name:'내열 기어', origin:'thalos', hub:'eir', base:390, art:'luxClock', use:'에이르 채취 기지의 시추기용 기어'},
-    {id:'essence', name:'빙화 정유', origin:'eir', hub:'veyra', base:530, art:'luxScent', use:'베이라 직조 길드의 향료 마감재'}
+    {id:'essence', name:'빙화 정유', origin:'eir', hub:'veyra', base:530, art:'luxScent', use:'베이라 직조 길드의 향료 마감재'},
+    {id:'wick',name:'유리 등심',origin:'mira',hub:'serein',base:460,art:'ex-vase-kiln',use:'세린 염전의 야간 표지등에 쓰는 내열 심지'},
+    {id:'salt',name:'진주 결정염',origin:'serein',hub:'calyx',base:350,art:'ex-ampoule-rain',use:'칼릭스 배양장의 영양액을 조제하는 결정염'},
+    {id:'resin',name:'수목 수지',origin:'calyx',hub:'mira',base:560,art:'luxSeed',use:'미라 공방의 유리 틀을 밀봉하는 수지'}
   ];
   const byId = id => goods.find(g => g.id === id);
   const port = id => GameData.planets.find(p => p.id === id);
@@ -35,17 +38,18 @@ window.Commerce = (() => {
   function bookSale(s,amount,cost) {
     s.cash+=amount; s.exchange.sales+=amount; s.exchange.costs+=cost; s.exchange.realized+=amount-cost;
   }
-  function trade(s,place,id,qty,buy) {
+  function trade(s,place,id,qty,buy,invoice) {
     if(!port(place)||!byId(id)||!integer(qty,1,1000))throw Error('품목과 1~1,000상자의 정수 수량을 선택하세요.');
-    const q=quote(s,place,id);
+    const q=quote(s,place,id),total=invoice??qty*(buy?q.ask:q.bid);
+    if(!integer(total,buy?1:0))throw Error('올바른 거래 금액이 아닙니다.');
     if(buy){
-      Economy.charge(s,qty*q.ask); add(s,place,id,qty,qty*q.ask);
+      Economy.charge(s,total); add(s,place,id,qty,total);
     }else{
       const h=holding(s,place,id);
       if(!h||h.qty<qty)throw Error('이 행성의 창고에 매도할 수량이 부족합니다.');
-      bookSale(s,qty*q.bid,take(s,h,qty));
+      bookSale(s,total,take(s,h,qty));
     }
-    Economy.note(s,'market',byId(id).name+(buy?' 현물 매수':' 현물 매도'),port(place).name+' · '+qty+'상자 × '+(buy?q.ask:q.bid)+' CR');
+    Economy.note(s,'market',byId(id).name+(buy?' 현물 매수':' 현물 매도'),port(place).name+' · '+qty+'상자 · '+total.toLocaleString('ko-KR')+' CR');
   }
   const registrationFee = 18000;
   function register(s) {
@@ -54,15 +58,16 @@ window.Commerce = (() => {
     s.exchange.carrier=true;
     Economy.note(s,'fleet','전문 운송사 등록','전용 적재 설비 도입 · 척당 8상자 확장');
   }
-  const capacity = s => 12+(s.exchange.carrier?8:0)+s.tech.cargo*4+Staff.capacity(s);
+  const capacity = (s,grade=1) => [0,5,11,20][grade-1]+12+(s.exchange.carrier?8:0)+s.tech.cargo*4+Staff.capacity(s);
   const freeShips = s => Economy.fleet(s)-s.exchange.routes.length-(s.freight?1:0);
   function manifest(lines) {
     return Array.isArray(lines)&&lines.length>=1&&lines.length<=goods.length&&lines.every(l=>byId(l.good)&&integer(l.qty,1,1000))&&new Set(lines.map(l=>l.good)).size===lines.length;
   }
-  function schedule(s,from,to,lines) {
-    if(!port(from)||!port(to)||from===to||!manifest(lines)||lines.reduce((n,l)=>n+l.qty,0)>capacity(s))throw Error('서로 다른 항구와 적재 한도 안의 화물 목록을 지정하세요.');
+  function schedule(s,from,to,lines,grade=1,guard=0) {
+    if(!integer(grade,1,4)||!port(from)||!port(to)||from===to||!manifest(lines)||lines.reduce((n,l)=>n+l.qty,0)>capacity(s,grade))throw Error('서로 다른 항구와 적재 한도 안의 화물 목록을 지정하세요.');
     if(freeShips(s)<1)throw Error('배정할 정기편 화물선이 없습니다.');
-    s.exchange.routes.push({id:++s.exchange.serial,from,to,lines:lines.map(l=>({...l})),cargo:null,stop:false,trips:0,profit:0});
+    const route={id:s.exchange.serial+1,from,to,lines:lines.map(l=>({...l})),cargo:null,stop:false,trips:0,profit:0,grade,guard:0};
+    Escort.assign(s,route,guard);s.exchange.serial++;s.exchange.routes.push(route);
     Economy.note(s,'fleet','자동 항로 개설',port(from).name+' → '+port(to).name+' · '+lines.length+'품목');
   }
   function cancel(s,id) {
@@ -77,7 +82,13 @@ window.Commerce = (() => {
   function departures(s) {
     for(const r of [...s.exchange.routes]){
       if(r.cargo){
-        const proceeds=r.lines.reduce((n,l)=>n+quote(s,r.to,l.good).bid*l.qty,0), gain=proceeds-r.cargo.cost;
+        const damage=Escort.encounter(s,r);
+        let proceeds=0;
+        for(const line of r.lines){
+          const lost=Math.ceil(line.qty*damage/100);
+          s.security.lost+=lost;proceeds+=quote(s,r.to,line.good).bid*(line.qty-lost);
+        }
+        const gain=proceeds-r.cargo.cost;
         bookSale(s,proceeds,r.cargo.cost); r.profit+=gain; r.trips++; r.cargo=null;
         Economy.note(s,'market',port(r.to).name+' 자동 매각',r.lines.length+'품목 · 손익 '+gain.toLocaleString('ko-KR')+' CR');
         if(r.stop)s.exchange.routes.splice(s.exchange.routes.indexOf(r),1);
@@ -100,7 +111,7 @@ window.Commerce = (() => {
       && e.stock.every(h=>port(h.place)&&byId(h.good)&&amount(h))&&new Set(e.stock.map(h=>h.place+'/'+h.good)).size===e.stock.length
       && Array.isArray(e.routes)&&new Set(e.routes.map(r=>r.id)).size===e.routes.length
       && e.routes.every(r=>integer(r.id,1,e.serial)&&port(r.from)&&port(r.to)&&r.from!==r.to&&manifest(r.lines)
-        && (r.cargo===null||integer(r.cargo.cost,1))&&typeof r.stop==='boolean'&&(!r.stop||r.cargo)&&integer(r.trips)&&Number.isSafeInteger(r.profit));
+        && integer(r.grade,1,4)&&integer(r.guard,0,3)&& (r.cargo===null||integer(r.cargo.cost,1))&&typeof r.stop==='boolean'&&(!r.stop||r.cargo)&&integer(r.trips)&&Number.isSafeInteger(r.profit));
   }
   return {goods,byId,port,initial,quote,holding,trade,register,registrationFee,capacity,freeShips,schedule,cancel,loadingCost,departures,valid};
 })();

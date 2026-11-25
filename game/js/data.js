@@ -6,14 +6,20 @@ window.GameData = (() => {
     {id:'lyra',name:'라이라',code:'LYR-07',sprite:'planetRing',owner:null,price:38000,x:.79,y:.65},
     {id:'orion',name:'오리온',code:'ORI-03',sprite:'planetPurple',owner:'NVA',price:64000,x:.31,y:.77},
     {id:'thalos',name:'탈로스',code:'THA-06',sprite:'planetBlue',owner:'AXM',price:49000,x:.12,y:.59},
-    {id:'eir',name:'에이르',code:'EIR-09',sprite:'planetIce',owner:null,price:26000,x:.58,y:.85}
+    {id:'eir',name:'에이르',code:'EIR-09',sprite:'planetIce',owner:null,price:26000,x:.58,y:.85},
+    {id:'mira',name:'미라',code:'MIR-11',sprite:'planetAmber',owner:'LUX',price:61000,x:.46,y:.18},
+    {id:'serein',name:'세린',code:'SER-12',sprite:'planetPearl',owner:'SEL',price:59000,x:.89,y:.39},
+    {id:'calyx',name:'칼릭스',code:'CAL-13',sprite:'planetMoss',owner:null,price:46000,x:.43,y:.61}
   ];
   const rivals = [
     {id:'HEL',name:'헬리오스 물류',en:'Helios Logistics',color:'#ffae68',icon:'sun',price:1620,weight:32},
     {id:'NVA',name:'노바 다이내믹스',en:'Nova Dynamics',color:'#b491ff',icon:'nova',price:2380,weight:28},
     {id:'AXM',name:'액시엄 테크',en:'Axiom Tech',color:'#63b3ff',icon:'layers',price:1940,weight:22},
     {id:'TOW',name:'자오선 예항',en:'Meridian Towing',color:'#a9ccaa',icon:'route',price:980,weight:9,ships:1,specialty:'항만 예인 · 연안 화물선 1척'},
-    {id:'POL',name:'극광 냉장해운',en:'Polar Cold Freight',color:'#92c8ff',icon:'box',price:1380,weight:12,ships:2,specialty:'저온 특산물 운송 · 냉장 화물선 2척'}
+    {id:'POL',name:'극광 냉장해운',en:'Polar Cold Freight',color:'#92c8ff',icon:'box',price:1380,weight:12,ships:2,specialty:'저온 특산물 운송 · 냉장 화물선 2척'},
+    {id:'LUX',name:'미라 등광유리',en:'Mira Beacon Glass',color:'#e7c380',icon:'sun',price:1730,weight:12,specialty:'미라 조명유리 공단'},
+    {id:'SEL',name:'세린 염광조합',en:'Serein Salterns',color:'#abceda',icon:'layers',price:1180,weight:10,specialty:'세린 결정염 생산 기지'},
+    {id:'ARC',name:'변경 호송해운',en:'Arc Convoy',color:'#9cd7ab',icon:'shield',price:2130,weight:14,ships:2,specialty:'변경 항로 운송 · 화물선 2척'}
   ];
   const techs = [
     {id:'warp',name:'워프 추진기',desc:'레벨당 항로 회전율 +18%',cost:18500,icon:'rocket'},

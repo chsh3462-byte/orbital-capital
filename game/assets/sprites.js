@@ -34,6 +34,27 @@ window.SPRITES = {
     "frames": 4,
     "fps": 2
   },
+  "planetAmber": {
+    "src": "assets/planetAmber.png",
+    "w": 64,
+    "h": 64,
+    "frames": 4,
+    "fps": 2
+  },
+  "planetPearl": {
+    "src": "assets/planetPearl.png",
+    "w": 64,
+    "h": 64,
+    "frames": 4,
+    "fps": 2
+  },
+  "planetMoss": {
+    "src": "assets/planetMoss.png",
+    "w": 64,
+    "h": 64,
+    "frames": 4,
+    "fps": 2
+  },
   "planetIce": {
     "src": "assets/planetIce.png",
     "w": 64,

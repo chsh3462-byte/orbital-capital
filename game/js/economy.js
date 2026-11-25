@@ -13,7 +13,7 @@ window.Economy = (() => {
     const s={version:1,day:1,tick:0,cash:82000,seed:179839,rep:58,realized:0,expenses:{research:0,marketing:0},tech:{warp:0,cargo:0,core:0,ai:0,shield:0},ads:[],event:null,
       planets:D.planets.map(p=>({id:p.id,owner:p.owner,buildings:p.owner?['spaceport']:[]})),
       markets:D.rivals.map(r=>({id:r.id,price:r.price,prev:r.price,history:[r.price],shares:0,basis:0,acquired:false,weight:r.weight})),
-      exchange:Commerce.initial(),hr:Staff.initial(),freight:null,guide:Tutorial.initial(),leisure:Leisure.initial(),history:[],quarters:[],mergers:[],logs:[]};
+      frontier:1,security:Escort.initial(),dealSerial:0,exchange:Commerce.initial(),hr:Staff.initial(),freight:null,guide:Tutorial.initial(),leisure:Leisure.initial(),history:[],quarters:[],mergers:[],logs:[]};
     // The company starts with ten settled operating days and an observed price history.
     for(let i=0;i<10;i++){for(let j=0;j<4;j++) quote(s); settle(s,false);}
     quote(s);s.tick=1;
@@ -48,7 +48,7 @@ window.Economy = (() => {
     const risk=s.event?.id==='risk'?Math.round(trade*.4*(1-s.tech.shield*.25)):0;
     const {research,marketing}=s.expenses;
     const contract=Freight.payment(s);
-    const goodsSales=s.exchange.sales,goodsCost=s.exchange.costs,wages=Staff.payroll(s);
+    const goodsSales=s.exchange.sales,goodsCost=s.exchange.costs,wages=Staff.payroll(s)+Escort.payroll(s);
     const revenue=trade+facility+dividend+contract+goodsSales,cost=fleetCost+landCost+risk+research+marketing+goodsCost+wages;
     return {goodsSales,goodsCost,wages,trade,contract,facility,dividend,fleetCost,landCost,risk,research,marketing,revenue,cost,net:revenue-cost};
   }

@@ -88,6 +88,9 @@ const worlds=[
   ['planetBlue','water',['172d62','244d9a','298ac3','64c2d6','c0f6de'],72],
   ['planetPurple','gas',['2e234b','533564','986aab','ca94cb','f3c4e3'],86],
   ['planetRing','ring',['322e51','68506b','a67e8a','d8b197','f4d9ae'],7],
+  ['planetAmber','rock',['33222f','744730','b87b35','efd57b','fff0aa'],43],
+  ['planetPearl','ice',['302e53','565a83','8e91ac','d4bbcf','f5e9ef'],75],
+  ['planetMoss','rock',['172d2e','305947','55805a','9fae74','d7d6a1'],59],
   ['planetIce','ice',['253a64','3f6892','74a6c5','abd6d4','def4eb'],31],
 ];
 for(const [key,kind,pal,seed] of worlds) {

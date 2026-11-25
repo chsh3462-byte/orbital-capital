@@ -6,18 +6,78 @@ const path = require('node:path');
 const vm = require('node:vm');
 const runtime = vm.createContext({});
 runtime.window = runtime;
-for (const file of ['data', 'tutorial', 'roulette', 'collection', 'registry', 'salon', 'freeport', 'leisure', 'staff', 'commerce', 'freight', 'economy', 'storage']) {
+for (const file of ['data', 'tutorial', 'roulette', 'collection', 'registry', 'salon', 'freeport', 'leisure', 'staff', 'escort', 'bargains', 'commerce', 'freight', 'economy', 'storage']) {
   const source = fs.readFileSync(path.join(__dirname, '../game/js', file + '.js'), 'utf8');
   vm.runInContext(source, runtime, {filename:file + '.js'});
 }
 const E = runtime.Economy, check = runtime.LocalSave.validate;
 const clone = state => check(JSON.parse(JSON.stringify(state)));
 {
+  const s=E.newGame(),B=runtime.Bargains,C=runtime.Commerce,G=runtime.Escort,F=runtime.Freeport;
+  const labels=new Set();
+  for(const place of ['mira','serein','calyx']){
+    for(const event of [null,'risk','boom','breakthrough']){
+      s.event=event?{id:event,left:1}:null;
+      for(let i=0;i<60;i++){
+        s.dealSerial=i;
+        const list=B.offers(s,place,'wick',i%4===0?20:3,!!(i%2));
+        assert.equal(new Set(list.map(o=>o.id)).size,4);
+        for(const offer of list)labels.add(offer.title);
+      }
+    }
+  }
+  assert.ok(labels.size>=45);s.event=null;
+  const jacket=runtime.Leisure.get('brooch'),termsArt=B.collectorOffers(s,jacket,'market');
+  assert.equal(new Set(termsArt.map(o=>o.id)).size,4);
+  const pledged=termsArt.find(o=>o.rep),oldRep=s.rep,oldCash=s.cash;
+  B.collect(s,jacket.id,'market',pledged.id);assert.equal(s.rep,oldRep+pledged.rep);assert.equal(s.cash,oldCash-pledged.total);assert.throws(()=>B.collect(s,jacket.id,'market',pledged.id));
+  const offered=B.offers(s,'mira','wick',7,true)[0],before=s.cash;
+  B.deal(s,'mira','wick',7,true,offered.id);
+  assert.equal(s.cash,before-offered.total);assert.equal(C.holding(s,'mira','wick').qty,offered.units);
+  const terms=B.offers(s,'mira','wick',1,false)[0],funds=s.cash;
+  B.deal(s,'mira','wick',1,false,terms.id);assert.equal(s.cash,funds+terms.total);
+  assert.throws(()=>B.deal(s,'mira','wick',1,false,-1));
+  G.hire(s,3);assert.equal(G.payroll(s),610);
+  C.schedule(s,'mira','serein',[{good:'wick',qty:21}],4,3);
+  assert.throws(()=>G.release(s,3));assert.throws(()=>C.schedule(s,'serein','mira',[{good:'salt',qty:5}],1,3));
+  const r=s.exchange.routes[0];C.departures(s);assert.ok(r.cargo);assert.throws(()=>G.assign(s,r,0));
+  for(let grade=1;grade<4;grade++)assert.ok(G.risk(grade)<G.risk(grade+1));
+  for(let guard=0;guard<3;guard++)assert.ok(G.chance(guard)<G.chance(guard+1));
+  function delivery(guard){
+    const simulation=clone(s),route=simulation.exchange.routes[0];route.guard=guard;
+    // Find an encounter whose outcome changes with escort rank, then replay that seed.
+    let seed=1;
+    for(;;seed++){
+      const a=(Math.imul(1664525,seed)+1013904223)>>>0,b=(Math.imul(1664525,a)+1013904223)>>>0;
+      if(a/4294967296<.42 && b/4294967296>.43 && b/4294967296<.91)break;
+    }
+    simulation.seed=seed;C.cancel(simulation,route.id);C.departures(simulation);
+    assert.equal(simulation.exchange.routes.length,0);G.release(simulation,3);check(simulation);
+    return simulation;
+  }
+  const defended=delivery(3),lost=delivery(0);
+  assert.equal(defended.security.wins,1);assert.equal(defended.security.lost,0);
+  assert.equal(lost.security.wins,0);assert.ok(lost.security.lost>0);
+  assert.equal(defended.cash-lost.cash,lost.security.lost*C.quote(s,'serein','wick').bid);
+  // An older sealed offer has already been paid. Conversion and replay cannot charge it again.
+  F.invite(s);const old=s.leisure.auction.lot,reserve=runtime.Leisure.get(old.id).price;
+  s.cash=reserve+8000;
+  E.charge(s,reserve);
+  s.leisure.auction.lot={id:old.id,close:s.day+3,quotes:old.quotes,bid:reserve};
+  const migrated=clone(s);assert.equal(migrated.cash,s.cash);assert.equal(migrated.leisure.auction.lot.leader,'player');
+  migrated.leisure.auction.lot.quotes=[reserve*2,reserve,reserve];F.round(migrated,old.id);
+  assert.equal(migrated.cash,s.cash+reserve);assert.equal(clone(migrated).leisure.auction.lot.bid,0);
+  const empty=E.newGame();F.invite(empty);const ready=empty.leisure.auction.lot;
+  F.start(empty,ready.id,runtime.Leisure.get(ready.id).price*2);
+  F.round(empty,ready.id);F.round(empty,ready.id);assert.equal(empty.leisure.auction.history[0].winner,'유찰');check(empty);
+  console.log('PASS: contextual quotes, actual invoices, graded encounters, escort payroll and allocation, legacy escrow and unsold lots.');
+}
+{
   const C=runtime.Commerce,H=runtime.Staff;
   const nextDay=s=>{let row;while(!row)row=E.step(s);return row;};
   const s=E.newGame();
-  const original=s.markets.slice(0,3);s.markets=original;delete s.hr;delete s.exchange;
-  check(s);assert.equal(s.markets.length,5);assert.equal(s.markets[0],original[0]);
+  const original=s.markets.slice(0,3);s.markets=original;s.planets=s.planets.slice(0,6);delete s.frontier;delete s.security;delete s.dealSerial;delete s.hr;delete s.exchange;
+  check(s);assert.equal(s.markets.length,8);assert.equal(s.planets.length,9);assert.equal(s.markets[0],original[0]);
   const lines=[{good:'tea',qty:8},{good:'gear',qty:4}];
   C.trade(s,'nereid','tea',10,true);
   C.trade(s,'nereid','tea',2,false);
@@ -183,8 +243,9 @@ for(const i of L.catalog){
   F.invite(collector);
   for(let lot=0;lot<50;lot++){
     const current=collector.leisure.auction.lot;assert.ok(current);
+    F.start(collector,current.id,L.get(current.id).price);
     F.bid(collector,current.id,Math.max(...current.quotes)+1000);
-    collector.day=current.close;F.closeAuction(collector);
+    F.round(collector,current.id);F.round(collector,current.id);
   }
   assert.equal(collector.leisure.auction.lot,null);
   assert.equal(clone(collector).leisure.owned.length,150);
@@ -193,7 +254,7 @@ for(const i of L.catalog){
   previous.leisure.displays={dock:'yacht',cabinet:'brooch',wall:'print'};
   previous.leisure.auction.history=[];
   assert.equal(clone(previous).leisure.auction.lot.id,'dial-noon');
-  console.log('PASS: 150 unique collectibles and animation sheets, purchases, complete sealed auction rotation and v0.3 collection migration.');
+  console.log('PASS: 150 unique collectibles and animation sheets, purchases, complete ascending auction rotation and v0.3 collection migration.');
 }
 const old=clone(loungeGame);
 delete old.leisure.displays;delete old.leisure.auction;delete old.leisure.wheel;
@@ -208,20 +269,20 @@ let lot=loungeGame.leisure.auction.lot;
 const item=L.get(lot.id),beforeBid=loungeGame.cash;
 assert.throws(()=>F.bid(loungeGame,lot.id,17));
 assert.throws(()=>F.bid(loungeGame,lot.id,loungeGame.cash+100000));
-F.bid(loungeGame,lot.id,item.price);F.bid(loungeGame,lot.id,item.price+1000);
-assert.equal(loungeGame.cash,beforeBid-item.price-1000);
-lot.quotes=[item.price+1000,item.price,item.price]; // Earlier sealed tie wins.
+assert.throws(()=>F.start(loungeGame,lot.id,200));
+F.start(loungeGame,lot.id,item.price);F.bid(loungeGame,lot.id,item.price);
+assert.equal(loungeGame.cash,beforeBid-item.price);
+lot.quotes=[item.price+10000,item.price,item.price];
+F.round(loungeGame,lot.id);assert.equal(lot.leader,'은고래 재단');assert.equal(loungeGame.cash,beforeBid);
 const replay=clone(loungeGame);
 for(let i=0;i<12;i++){E.step(loungeGame);E.step(replay);}
 assert.equal(JSON.stringify(loungeGame),JSON.stringify(replay));
-assert(!loungeGame.leisure.owned.includes(item.id));
-assert.equal(loungeGame.leisure.auction.history[0].winner,'은고래 재단');
-assert.equal(loungeGame.cash,beforeBid+loungeGame.history.slice(-3).reduce((sum,h)=>sum+h.net+h.marketing+h.research,0));
-lot=loungeGame.leisure.auction.lot;
+assert(!loungeGame.leisure.owned.includes(item.id));assert.equal(loungeGame.leisure.auction.history[0].winner,'은고래 재단');
+lot=loungeGame.leisure.auction.lot;F.start(loungeGame,lot.id,L.get(lot.id).price);
 const winning=Math.max(...lot.quotes)+1000;
 F.bid(loungeGame,lot.id,winning);const balanceAfterBid=loungeGame.cash;
-for(let i=0;i<12;i++)E.step(loungeGame);
-assert.equal(loungeGame.cash,balanceAfterBid+loungeGame.history.slice(-3).reduce((sum,h)=>sum+h.net+h.marketing+h.research,0));
+F.round(loungeGame,lot.id);F.round(loungeGame,lot.id);
+assert.equal(loungeGame.cash,balanceAfterBid);
 assert(loungeGame.leisure.owned.includes(lot.id));
 assert.equal(loungeGame.leisure.auction.history[0].amount,winning);
 assert.equal(loungeGame.leisure.auction.history[0].winner,'player');
@@ -238,7 +299,7 @@ assert.equal(JSON.stringify(clone(loungeGame).leisure),JSON.stringify(loungeGame
 console.log('PASS: economic regression, old save migration, public venues, owned-only display, sealed auctions, escrow, deterministic settlement, single-zero roulette.');
 const ships=L.catalog.filter(i=>L.source(i)==='hangar');
 assert.equal(ships.length,50);
-for(const ship of ships)assert.equal(runtime.Registry.ports(ship.id).length,2+runtime.Registry.ships[ship.id][0]);
+for(const ship of ships)assert.equal(runtime.Registry.ports(ship.id).length,[3,4,5,9][runtime.Registry.ships[ship.id][0]-1]);
 const completed=clone(loungeGame);
 completed.leisure.owned.push(...['astrolabe','key','tideglass','echo'].filter(id=>!completed.leisure.owned.includes(id)));
 completed.leisure.auction.lot=null;delete completed.leisure.tables;

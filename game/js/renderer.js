@@ -54,7 +54,7 @@ window.PixelArt=(()=>{
   }
   const HQ={id:'hq',x:.49,y:.48,name:'오르빗 본사',sprite:'hq'};
   const nodes=[...GameData.planets,HQ];
-  const colors={player:'#5ee8d2',HEL:'#ffb375',NVA:'#bfa1ff',AXM:'#7dbdff',free:'#8e9eaf'};
+  const colors={player:'#5ee8d2',free:'#8e9eaf',...Object.fromEntries(GameData.rivals.map(d=>[d.id,d.color]))};
   // Three-by-five bitmaps keep the settlement amount aligned to the map's pixel grid.
   const digits={'0':[7,5,5,5,7],'1':[2,6,2,2,7],'2':[7,1,7,4,7],'3':[7,1,7,1,7],
     '4':[5,5,7,1,1],'5':[7,4,7,1,7],'6':[7,4,7,5,7],'7':[7,1,1,1,1],'8':[7,5,7,5,7],

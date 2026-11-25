@@ -275,7 +275,7 @@
   dialog.addEventListener('close',()=>{if(!dialog.open)modal=null;});
   function frame(now){
     const dt=Math.min(.25,Math.max(0,(now-last)/1000));last=now;
-    const sim=paused||modal||document.hidden?0:dt*speed;
+    const sim=paused||modal||$('#account-dialog').open||document.hidden?0:dt*speed;
     playTime+=sim;clock+=sim;
     if(clock>=3){clock-=3;const row=E.step(state);if(row){map.payout(row.net+row.research+row.marketing);auto();}render();}
     if(now-lastPaint>=32&&!document.hidden){
@@ -305,5 +305,6 @@
   window.desktopSaves?.onClosing(()=>save('auto'));
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&state)auto();last=performance.now();});
   window.addEventListener('pagehide',()=>{if(!window.desktopSaves&&saveEnabled&&state)LocalSave.write('auto',state).catch(()=>{});});
-  nav(state.guide.status==='active'?Tutorial.chapter(state).page:'dashboard');requestAnimationFrame(frame);
+  nav(state.guide.status==='active'?Tutorial.chapter(state).page:'dashboard');
+  AccountUI.attach(()=>state.cash,()=>save('auto'));requestAnimationFrame(frame);
 })();

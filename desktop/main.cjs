@@ -41,7 +41,9 @@ async function createWindow() {
   gameWindow = win;
   win.removeMenu();
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-  win.webContents.on('will-navigate', event => event.preventDefault());
+  win.webContents.on('will-navigate', (event, url) => {
+    if (url !== entryUrl) event.preventDefault();
+  });
   let closing = false;
   win.on('close', async event => {
     event.preventDefault();
@@ -86,7 +88,12 @@ if (!app.requestSingleInstanceLock()) {
   app.whenReady().then(async () => {
     session.defaultSession.webRequest.onBeforeRequest(
       { urls: ['http://*/*', 'https://*/*', 'ws://*/*', 'wss://*/*'] },
-      (_details, callback) => callback({ cancel: true })
+      (details, callback) => {
+        const u = new URL(details.url);
+        const transport = u.protocol === 'https:' || (u.protocol === 'http:' && ['127.0.0.1','localhost','[::1]'].includes(u.hostname));
+        const accountApi = /^\/api\/(register|login|logout|balance|rankings)$/.test(u.pathname);
+        callback({ cancel: !(details.webContentsId === gameWindow?.webContents.id && details.resourceType === 'xhr' && transport && accountApi) });
+      }
     );
     await createWindow();
   }).catch(error => {

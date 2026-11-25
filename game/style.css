@@ -33,3 +33,14 @@ main{margin-left:188px;padding:29px clamp(17px,2.1vw,36px) 16px;max-width:2200px
 .release-record>div{padding:0 6px 14px 16px;line-height:1.65;color:#c9d4dc}
 .release-record ul{padding-left:17px;margin:0}.release-record li+li,.release-record section+section{margin-top:6px}
 .release-record h4,.release-record p{margin:0}
+
+#account-dialog{width:min(570px,95vw);max-height:88vh;overflow:auto}
+.account-content{padding:0 20px 18px}
+.account-content details,.account-content h3{margin-top:1rem}
+.account-content summary{cursor:pointer;color:var(--soft)}
+.account-content .field{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.account-content input{width:min(68%,27em)}
+.account-content strong,#account-feedback{color:var(--mint,#81dec6)}
+.account-ranks{overflow:auto;max-height:32vh}
+.account-content [hidden]{display:none}
+.account-content th,.account-content td{white-space:nowrap}

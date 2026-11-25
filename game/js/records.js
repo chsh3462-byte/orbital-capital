@@ -3,6 +3,9 @@ window.Records=(()=>{
   // Dates are the local release dates in Korea. Commit references identify milestones
   // within a release, including deployment work that did not change its version.
   const history=[
+    {version:'0.6.0',date:'2026-11-25',title:'계정과 자금 랭킹',
+      updates:['운영 지원에서 회원가입·로그인·로그아웃을 이용하고, 현재 보유 현금을 서버 랭킹에 등록할 수 있습니다.'],
+      development:[['계정별 저장과 서버 순위','기존 게스트 슬롯을 보존하고 계정별 슬롯을 추가했습니다. SQLite 파일에 계정과 최근 등록액을 보관하고 동점은 공동 순위로 계산합니다.']]},
     {version:'0.5.1',date:'2026-11-25',title:'게임 기록 열람',
       updates:['경영 관제실의 전체 기록에서 회사 운영 기록, 버전별 업데이트, 개발 기록을 전환할 수 있습니다.'],
       development:[['기록 보관','버전 이력을 게임 파일에 포함했습니다. 기존 세이브를 열거나 Windows에서 오프라인으로 실행해도 같은 이력을 읽을 수 있습니다.']]},

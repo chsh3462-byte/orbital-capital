@@ -6,7 +6,7 @@ function createSaveStore(directory) {
   const pending = new Map();
 
   function getFile(slot) {
-    if (slot !== 'auto' && slot !== 'manual') throw new Error('알 수 없는 저장 슬롯입니다.');
+    if (typeof slot !== 'string' || !/^(?:user-[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}-)?(?:auto|manual)$/.test(slot)) throw new Error('알 수 없는 저장 슬롯입니다.');
     return path.join(directory, slot + '.json');
   }
 

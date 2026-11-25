@@ -59,13 +59,19 @@ window.LocalSave = (() => {
     }catch{}
     throw Error('저장 형식 또는 게임 데이터가 손상되었습니다.');
   }
+  function scopedSlot(slot){
+    if(slot!=='auto' && slot!=='manual')throw Error('알 수 없는 저장 슬롯입니다.');
+    return window.AccountUI?.profile?'user-'+window.AccountUI.profile+'-'+slot:slot;
+  }
   async function write(slot,s){
+    slot=scopedSlot(slot);
     validate(s);
     const raw=JSON.stringify(s);
     if(window.desktopSaves)await window.desktopSaves.write(slot,raw);
     else localStorage.setItem('orbital-capital.v1.'+slot,raw);
   }
   async function read(slot){
+    slot=scopedSlot(slot);
     const raw=window.desktopSaves?await window.desktopSaves.read(slot):localStorage.getItem('orbital-capital.v1.'+slot);
     if(raw===null)return null;
     return validate(JSON.parse(raw));

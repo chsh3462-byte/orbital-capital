@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Orbital Capital · 오르빗 캐피탈</title><link rel="stylesheet" href="style.css"></head>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="account-api-origin" content=""><meta name="color-scheme" content="dark"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https: http://127.0.0.1:* http://localhost:* http://[::1]:*; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Orbital Capital · 오르빗 캐피탈</title><link rel="stylesheet" href="style.css"></head>
 <body>
 <aside class="side">
 <div class="brand"><svg viewBox="0 0 40 40" aria-hidden="true"><path fill="#68eed2" d="M1 29 21 4h11L12 29zM17 30l9-11 12 16H22z"/><path fill="#1a9a8f" d="m14 32 5-6 6 9H12z"/></svg><div>ORBITAL<br><b>CAPITAL</b></div></div>
 <div class="side-section">워크스페이스</div>
 <nav id="nav"></nav>
-<div class="side-bottom"><div class="side-section">운영 지원</div><button data-act="guideStart" data-ico="finance" title="첫 근무 인계서 열기">근무 인계서</button><button data-act="save" data-ico="save">게임 저장</button><button data-act="loads" data-ico="folder">불러오기</button><div class="profile"><span class="corp-logo">OC</span><div><b>오르빗 캐피탈</b><small>독립 우주 기업</small></div></div></div>
+<div class="side-bottom"><div class="side-section">운영 지원</div><button data-act="guideStart" data-ico="finance" title="첫 근무 인계서 열기">근무 인계서</button><button data-act="save" data-ico="save">게임 저장</button><button data-act="loads" data-ico="folder">불러오기</button><button id="account-open" type="button" data-ico="network">계정 · 자금 랭킹</button><div class="profile"><span class="corp-logo">OC</span><div><b>오르빗 캐피탈</b><small>독립 우주 기업</small></div></div></div>
 </aside>
 <main><header class="top"><div class="title-wrap"><span class="overline" id="section-en">COMMAND CENTER</span><h1 id="page-title">경영 관제실</h1></div><div class="clockbar"><div class="date"><span data-icon="calendar"></span><b id="date">2186.01.11</b></div><div class="playback"><button class="icon-btn" id="pause" data-act="pause" aria-label="일시정지"></button><button id="speed" data-act="speed" title="진행 속도 변경">1×</button></div></div></header>
 <section id="guide" aria-label="첫 근무 인계서" hidden></section><div id="metrics" class="metrics"></div>
@@ -18,4 +18,22 @@
 <div class="lower-grid"><section class="panel"><div class="panel-head"><h2><i class="stripe"></i>운영 기록</h2><button class="link-btn" data-act="logs">전체 기록 <span>›</span></button></div><div id="logs"></div></section><section class="panel"><div class="panel-head"><h2><i class="stripe"></i>일일 손익</h2><button class="link-btn" data-nav="finance">재무제표 <span>›</span></button></div><div id="breakdown"></div></section></div></div>
 <section id="workspace" hidden></section><footer><span><i class="dot"></i> 로컬 시스템 연결됨</span><span id="saved-status">로컬 세이브 준비</span></footer>
 </main><dialog id="dialog"><div class="dialog-head"><h2 id="dialog-title"></h2><button data-act="close" class="icon-btn" aria-label="닫기">×</button></div><div id="dialog-body"></div></dialog><div id="toast" role="status"></div>
-<link rel="stylesheet" href="lounge.css"><script src="assets/sprites.js"></script><script src="js/data.js"></script><script src="js/tutorial.js"></script><script src="js/roulette.js"></script><script src="js/collection.js"></script><script src="js/registry.js"></script><script src="js/salon.js"></script><script src="js/freeport.js"></script><script src="js/leisure.js"></script><script src="js/staff.js"></script><script src="js/escort.js"></script><script src="js/bargains.js"></script><script src="js/commerce.js"></script><script src="js/exchange-ui.js"></script><script src="js/freight.js"></script><script src="js/economy.js"></script><script src="js/storage.js"></script><script src="js/renderer.js"></script><script src="js/ui.js"></script><script src="js/records.js"></script><script src="js/app.js"></script></body></html>
+<dialog id="account-dialog" aria-labelledby="account-title">
+  <div class="dialog-head"><h2 id="account-title">계정 · 자금 랭킹</h2><button type="button" id="account-close" class="icon-btn" aria-label="닫기">×</button></div>
+  <div class="account-content">
+    <p><b id="account-name"></b> · 현재 보유 현금 <strong id="rank-cash"></strong></p>
+    <details><summary>계정 서버 주소</summary><label class="field">서버 <input id="account-server" type="url" spellcheck="false" autocomplete="off"></label><p class="hint">같은 서버에 접속한 회사끼리 순위를 비교합니다.</p></details>
+    <form id="account-form">
+      <label class="field">아이디 <input id="login-name" required minlength="2" maxlength="24" autocomplete="username"></label>
+      <label class="field">비밀번호 <input id="login-password" type="password" required minlength="8" maxlength="128" autocomplete="current-password"></label>
+      <div class="action-row"><button class="btn" type="submit" value="login">로그인</button><button class="btn" type="submit" value="register">회원가입</button></div>
+      <p class="hint">첫 로그인 시 새 회사로 시작합니다. 게스트 회사와 계정별 진행 상황은 이 기기에 따로 저장됩니다.</p>
+    </form>
+    <button class="btn" id="account-switch" hidden>로그아웃</button>
+    <h3>보유 현금 순위</h3><p class="hint">마지막으로 등록한 현금 기준 상위 100개 회사입니다. 같은 금액은 공동 순위입니다.</p>
+    <div class="action-row"><button class="btn" id="publish-balance" hidden>현재 자금 등록</button><button class="btn" id="rank-refresh">랭킹 새로고침</button></div>
+    <p id="account-feedback" role="status" aria-live="polite"></p>
+    <div class="account-ranks"><table><thead><tr><th>순위</th><th>아이디</th><th>등록 자금</th><th>등록 시각</th></tr></thead><tbody id="ranking-rows"></tbody></table></div>
+    <p class="hint" id="rank-empty">새로고침하면 서버의 순위를 확인할 수 있습니다.</p>
+  </div></dialog>
+<link rel="stylesheet" href="lounge.css"><script src="assets/sprites.js"></script><script src="js/data.js"></script><script src="js/tutorial.js"></script><script src="js/roulette.js"></script><script src="js/collection.js"></script><script src="js/registry.js"></script><script src="js/salon.js"></script><script src="js/freeport.js"></script><script src="js/leisure.js"></script><script src="js/staff.js"></script><script src="js/escort.js"></script><script src="js/bargains.js"></script><script src="js/commerce.js"></script><script src="js/exchange-ui.js"></script><script src="js/freight.js"></script><script src="js/economy.js"></script><script src="js/accounts.js"></script><script src="js/storage.js"></script><script src="js/renderer.js"></script><script src="js/ui.js"></script><script src="js/records.js"></script><script src="js/app.js"></script></body></html>

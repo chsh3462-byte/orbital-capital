@@ -30,11 +30,11 @@ const TUTORIAL_SCRIPT = [
     id: "tutorial_02",
     step: 2,
     totalSteps: 5,
-    speaker: "화물선 선장 이안",
+    speaker: "AI 관제 비서 (AURA)",
     role: "TUTORIAL 2/5 // FLEET & CARGO",
     title: "첫 화물 적재 및 출항",
     lines: [
-      "이안입니다. 운송장에 네레이드에서 사서 라이라에 파는 걸로 적어 뒀어요. 찻잎을 몇 상자 실을지는 대표님이 정해 주세요.",
+      "이안 씨가 운송장을 보내왔어요. 네레이드 찻잎을 라이라에 팔기로 했죠? 몇 상자 실을지 함께 정해 봐요.",
       "항로를 지정하면 다음 결산에 짐을 싣습니다. 취소하기 전까지 같은 항로를 돌 테니 예상 손익도 한번 봐 주세요."
     ],
     highlightTarget: "#fleet-status-panel",
@@ -54,7 +54,7 @@ const TUTORIAL_SCRIPT = [
     role: "TUTORIAL 3/5 // TIME CONTROL",
     title: "시간 배속 전환 및 정산",
     lines: [
-      "부두에서 신호가 왔어요. 배가 나갔습니다. 위쪽의 1×를 눌러 2×로 바꾸고 부두 시계를 조금 빨리 돌려 볼까요?",
+      "부두에서 신호가 왔어요. 배가 나갔습니다. 위쪽 배속 버튼을 눌러 부두 시계를 조금 빨리 돌려 볼까요?",
       "지정 항로의 매각 대금은 화물이 도착하는 날 장부에 들어와요."
     ],
     highlightTarget: "#time-speed-controls",

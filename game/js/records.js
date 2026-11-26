@@ -3,6 +3,9 @@ window.Records=(()=>{
   // Dates are the local release dates in Korea. Commit references identify milestones
   // within a release, including deployment work that did not change its version.
   const history=[
+    {version:'0.7.2',date:'2026-11-26',title:'AURA 동행 안내',
+      updates:['AURA가 관제실과 주문창에 남아 첫 운송부터 주식 매수까지 안내합니다.'],
+      development:[['상황별 표정','선적 대기, 수량 오류, 실습 완료에 맞춰 표정과 대사를 연결했습니다. 안내를 접어도 AURA는 옆에 남습니다.']]},
     {version:'0.7.1',date:'2026-11-26',title:'변방의 생존자 · 네레이드 야간 창구',
       updates:['도착 방송, 접수원, 선장 이안, 비서 AURA가 등장하는 픽셀 대화극과 첫 운송장을 추가했습니다.'],
       development:[['기존 회사에서도 만나는 첫날','대화 위치를 회사별로 저장합니다. 상단 취임 이야기에서 실습 보상을 건드리지 않고 다시 볼 수 있습니다.']]},

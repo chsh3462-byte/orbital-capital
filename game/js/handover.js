@@ -69,13 +69,6 @@ window.Handover=(()=>{
       s.cash+=20000;s.story.debt=20000;Economy.note(s,'finance','긴급 운영 자금 대출','20,000 CR · 하루 이자 20 CR');
     }
   }
-  const targets=['지도에서 행성 선택','화물 적재 및 항로 지정','배속 올리기','일일 재무제표 열기','은하 증권 시장 열기'];
-  function panel(s){
-    const scene=current(s);if(!scene)return '';
-    if(scene.choices)return '<article class="handover">'+UI.btn('취임 이야기 열기','dockOpen')+'</article>';
-    const portrait=scene.step===2?'pilot':'aura';
-    return '<article class="handover"><small>'+scene.role+'</small><h2>'+scene.title+'</h2><span class="dock-mini art-'+portrait+'" aria-hidden="true"></span><b>'+scene.speaker+'</b>'+scene.lines.map(l=>'<p>'+l+'</p>').join('')+'<div class="handover-actions">'+UI.btn(targets[scene.step-1],'storyTarget')+'</div><p class="hint">'+scene.actionHint+' · '+scene.reward.message+'</p></article>';
-  }
   function handbook(s){
     const g=s.story;
     const checklist=missions.map(m=>{
@@ -84,5 +77,5 @@ window.Handover=(()=>{
     }).join('');
     return '<p>'+ (g.scene==='completed'?'직위 · 정식 CEO 인가':'인계 진행 · '+current(s).title)+'</p>'+UI.kv('총자산 / 목표',UI.money(worth(s))+' / '+UI.money(g.baseline*2))+'<div class="handover-list">'+checklist+'</div><h3>'+guide.emergencyLoan.title+'</h3><p>현금 10,000 CR 이하에서 20,000 CR를 빌릴 수 있습니다. 전액 상환까지 결산일마다 이자 20 CR가 부채에 더해집니다.</p>'+UI.kv('상환 잔액',UI.money(g.debt))+UI.btn('대출 신청','storyLoan','',!!g.debt||s.cash>10000)+UI.btn('전액 상환','storyRepay','',!g.debt||s.cash<g.debt,false)+'<h3>'+guide.saveBackup.title+'</h3><p>'+guide.saveBackup.summary+'</p>'+UI.btn('JSON 백업','storyExport')+UI.btn('백업 복구…','storyImport','',false,false);
   }
-  return {initial,valid,attach,current,choose,advance,has,claim,worth,loan,panel,handbook};
+  return {initial,valid,attach,current,choose,advance,has,claim,worth,loan,handbook};
 })();

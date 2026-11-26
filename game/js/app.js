@@ -30,6 +30,10 @@
   function auto(){save().catch(()=>error('자동 저장 실패 · 로컬 저장 공간과 쓰기 권한을 확인하세요.'));}
   let pendingBackup=null;
   const dock=$('#dock-dialog');
+  const aura=Aura.mount(refreshAura);
+  function refreshAura(){if(state)aura.update(state,page,modal,paused);}
+  const dialogChanges=new MutationObserver(refreshAura);
+  for(const el of [dock,dialog,$('#account-dialog')])dialogChanges.observe(el,{attributes:true,attributeFilter:['open']});
   let dockPage='arrival',dockReplay=false,dockFrame=0;
   function showDock(page){
     dockPage=page;
@@ -73,7 +77,7 @@
     return reward;
   }
   function drawGuide(){
-    const box=$('#guide'),html=Handover.panel(state)||Tutorial.panel(state,page);
+    const box=$('#guide'),html=Handover.current(state)?'':Tutorial.panel(state,page);
     if(guideView!==html){box.innerHTML=html;guideView=html;animationBatch=0;}
     box.hidden=!html;
     const scene=Handover.current(state);
@@ -82,6 +86,7 @@
     const routeButton=$('#fleet-status-panel [data-act="routeSetup"]');
     routeButton.disabled=Commerce.freeShips(state)<1;
     map.buttons.nereid.classList.toggle('guide-focus',state.guide.status==='active'&&state.guide.step===0&&!state.guide.seen);
+    refreshAura();
   }
   function inspected(){
     const g=state.guide;
@@ -210,7 +215,7 @@
     $('#dialog-title').textContent=title;$('#dialog-body').innerHTML=body;
     if(kind==='goodsOrder'||kind==='routeSetup')ExchangeUI.updateQuote(state,exchangePort,id,document);
     dialog.classList.toggle('wheel-dialog',kind==='casino');
-    if(!dialog.open)dialog.showModal();animationBatch=0;
+    if(!dialog.open)dialog.showModal();animationBatch=0;refreshAura();
   }
   function restoreCompany(loaded){
     state=loaded;spinEnd=0;clock=0;playTime=0;map.pulses=[];map.transit=0;saveEnabled=true;
@@ -225,7 +230,9 @@
     if(b.dataset.nav){nav(b.dataset.nav);return;}
     const a=b.dataset.act,id=b.dataset.id;
     try{
+      if(a)aura.clearIssue();
       switch(a){
+        case 'auraExchange':nav('exchange');return;
         case 'dockOpen':beginDock();return;
         case 'dockNext':
           if(!dock.open||!DockStory.pages[dockPage].next.some(([,to])=>to===id))return;
@@ -245,7 +252,11 @@
             else if(Commerce.freeShips(state)>0){exchangePort='nereid';await open('routeSetup','tea');}
             else{nav('exchange');notify('지정 항로는 다음 결산에 선적합니다. 자금과 운항 상태를 확인하세요.');}
           }
-          if(step===3)$('#speed').click();
+          if(step===3){
+            if(dialog.open)dialog.close();
+            speed=speed===2?4:2;
+            storyAction('CHANGE_TIME_SPEED_ABOVE_1X');render();
+          }
           if(step===4)nav('finance');
           if(step===5)nav('stocks');
           return;
@@ -382,9 +393,10 @@
         default:return;
       }
       changed(state.logs[0].title);
-    }catch(err){error(err.message||'작업을 완료할 수 없습니다.');}
+    }catch(err){const message=err.message||'작업을 완료할 수 없습니다.';error(message);aura.warn(message);}
   });
   document.addEventListener('input',e=>{
+    aura.clearIssue();
     if(modal?.kind==='goodsOrder'||modal?.kind==='routeSetup')ExchangeUI.updateQuote(state,exchangePort,modal.id,document);
     if(e.target.id==='qty'&&modal?.kind==='stock'){
       const q=e.target.valueAsNumber,r=state.markets.find(r=>r.id===modal.id);
@@ -393,8 +405,9 @@
         inspected();$('.guide-note')?.remove();$('#dialog-body').insertAdjacentHTML('beforeend',Tutorial.dialogNote(state));
       }
     }
+    refreshAura();
   });
-  dialog.addEventListener('close',()=>{if(!dialog.open)modal=null;});
+  dialog.addEventListener('close',()=>{if(!dialog.open){modal=null;refreshAura();}});
   function frame(now){
     const dt=Math.min(.25,Math.max(0,(now-last)/1000));last=now;
     const sim=paused||dock.open||Handover.current(state)?.choices||modal||$('#account-dialog').open||document.hidden?0:dt*speed;

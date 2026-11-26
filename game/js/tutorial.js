@@ -69,14 +69,12 @@ window.Tutorial = (() => {
   function panel(s,page){
     const g=s.guide,U=UI;
     if(g.status==='offer'&&page==='dashboard')return '<div class="guide-offer"><div class="dispatch-icon">'+PixelArt.thumb('spaceport',48)+'</div><div class="guide-copy"><small>운항실장 윤서진 · 첫 근무 인계</small><h2>네레이드에서 운송장 한 장이 도착했습니다.</h2><p>첫 정기편의 장부를 따라 거점, 투자, 인수 비용을 살펴보세요.</p></div><div class="guide-actions">'+U.btn('인계받기','guideStart')+U.btn('자유 경영','guideLater','',false,false)+'</div></div>';
-    if(g.status!=='active')return '';
-    const c=chapter(s);
-    return '<div class="guide-detail"><div class="guide-main"><div class="dispatch-icon">'+PixelArt.thumb(c.art,48)+'</div><div class="guide-copy"><small>운항실장 윤서진 · 교대 인계 '+(g.step+1)+' / '+chapters.length+'</small><h2>'+c.title+'</h2><p>'+c.story+'</p></div></div><div class="guide-task"><div><b>'+(g.seen?'확인한 내용':'직접 확인')+'</b><p>'+(g.seen?insight(s):c.task)+'</p></div><div class="guide-actions">'+(g.step?U.btn('이전','guidePrev','',false,false):'')+U.btn(g.seen?(g.step===chapters.length-1?'인계 마치기':'다음 인계'):c.action,g.seen?'guideNext':'guideTarget')+U.btn('나중에','guideLater','',false,false)+'</div></div></div>';
+    return '';
   }
   function dialogNote(s){
     const g=s.guide;
     if(g.status!=='active')return '';
     return '<aside class="guide-note"><small>운항실장 인계 메모 · '+(g.step+1)+' / '+chapters.length+'</small><p>'+(g.seen?insight(s):chapter(s).task)+'</p>'+(g.seen?UI.btn(g.step===chapters.length-1?'인계 마치기':'다음 인계','guideNext'):'')+'</aside>';
   }
-  return {chapters,initial,valid,issuer,site,chapter,panel,dialogNote,preview};
+  return {chapters,initial,valid,issuer,site,chapter,insight,panel,dialogNote,preview};
 })();

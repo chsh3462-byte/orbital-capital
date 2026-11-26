@@ -44,3 +44,10 @@ main{margin-left:188px;padding:29px clamp(17px,2.1vw,36px) 16px;max-width:2200px
 .account-ranks{overflow:auto;max-height:32vh}
 .account-content [hidden]{display:none}
 .account-content th,.account-content td{white-space:nowrap}
+
+.handover{border:1px solid var(--line,#35505a);border-left:3px solid #6adac4;background:#13222b;border-radius:6px;padding:18px 22px}
+.handover small{color:#84e4d0;font-family:monospace;letter-spacing:.06em}
+.handover h2{margin:.55rem 0}.handover p{margin:.55rem 0;line-height:1.55}
+.handover-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.handover-focus{outline:2px solid #70dec7;outline-offset:2px}
+.handover-list section{padding:12px 0;border-bottom:1px solid var(--line)}

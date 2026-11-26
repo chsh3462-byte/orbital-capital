@@ -90,6 +90,7 @@ window.Commerce = (() => {
         }
         const gain=proceeds-r.cargo.cost;
         bookSale(s,proceeds,r.cargo.cost); r.profit+=gain; r.trips++; r.cargo=null;
+        if(s.story&&proceeds>0)s.story.deliveries++;
         Economy.note(s,'market',port(r.to).name+' 자동 매각',r.lines.length+'품목 · 손익 '+gain.toLocaleString('ko-KR')+' CR');
         if(r.stop)s.exchange.routes.splice(s.exchange.routes.indexOf(r),1);
       }else{
@@ -101,6 +102,7 @@ window.Commerce = (() => {
           cost+=take(s,h,Math.min(h?.qty||0,l.qty));
         }
         s.cash-=price; r.cargo={cost};
+        Handover.advance(s,'DISPATCH_FIRST_SHIP');
       }
     }
   }

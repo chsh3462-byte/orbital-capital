@@ -10,7 +10,7 @@ window.Economy = (() => {
     if(s.logs.length>100) s.logs.pop();
   }
   function newGame() {
-    const s={version:1,day:1,tick:0,cash:82000,seed:179839,rep:58,realized:0,expenses:{research:0,marketing:0},tech:{warp:0,cargo:0,core:0,ai:0,shield:0},ads:[],event:null,
+    const s={story:Handover.initial(1),version:1,day:1,tick:0,cash:82000,seed:179839,rep:58,realized:0,expenses:{research:0,marketing:0},tech:{warp:0,cargo:0,core:0,ai:0,shield:0},ads:[],event:null,
       planets:D.planets.map(p=>({id:p.id,owner:p.owner,buildings:p.owner?['spaceport']:[]})),
       markets:D.rivals.map(r=>({id:r.id,price:r.price,prev:r.price,history:[r.price],shares:0,basis:0,acquired:false,weight:r.weight})),
       frontier:1,security:Escort.initial(),dealSerial:0,exchange:Commerce.initial(),hr:Staff.initial(),freight:null,guide:Tutorial.initial(),leisure:Leisure.initial(),history:[],quarters:[],mergers:[],logs:[]};
@@ -20,9 +20,10 @@ window.Economy = (() => {
     s.logs=[];note(s,'finance','일일 영업 결산','+'+s.history.at(-1).net.toLocaleString('ko-KR')+' CR');
     note(s,'system','관제 시스템 온라인','오르빗 캐피탈 본사');
     note(s,'fleet','정기 운송 항로 개통','네레이드 교역권');
+    Handover.attach(s,1);
     return s;
   }
-  function fleet(s){return 3+s.tech.ai+D.rivals.reduce((n,d)=>n+(s.markets.find(r=>r.id===d.id)?.acquired?(d.ships||0):0),0);}
+  function fleet(s){return (s.story?.baseFleet??3)+s.tech.ai+D.rivals.reduce((n,d)=>n+(s.markets.find(r=>r.id===d.id)?.acquired?(d.ships||0):0),0);}
   function tier(s){return Math.min(3,1+Math.floor(Object.values(s.tech).reduce((a,b)=>a+b,0)/3));}
   function rep(s){return Math.min(100,s.rep+s.ads.reduce((a,b)=>a+D.campaigns.find(c=>c.id===b.id).rep,0));}
   function weights(s){
@@ -44,7 +45,8 @@ window.Economy = (() => {
     const trade=Math.round(regular*910*Math.max(.8,Math.min(1.2,demand))*(1+s.tech.warp*.18)*(1+s.tech.cargo*.22)*(s.event?.id==='boom'?1.35:1)*mult);
     const facility=Math.round(owned.flatMap(p=>p.buildings).reduce((a,id)=>a+D.facilities.find(f=>f.id===id).income,0)*(1+s.tech.core*.25)*(s.event?.id==='breakthrough'?1.30:1)*mult);
     const dividend=s.markets.reduce((a,r)=>a+(r.acquired?0:Math.floor(r.shares*r.price*.002)),0);
-    const fleetCost=fleet(s)*310,landCost=owned.reduce((a,p)=>a+200+210*p.buildings.length,0);
+    const discount=Handover.has(s,'mission_second_outpost')?Math.round(s.exchange.routes.length*310*.05):0;
+    const fleetCost=fleet(s)*310-discount,landCost=owned.reduce((a,p)=>a+200+210*p.buildings.length,0);
     const risk=s.event?.id==='risk'?Math.round(trade*.4*(1-s.tech.shield*.25)):0;
     const {research,marketing}=s.expenses;
     const contract=Freight.payment(s);
@@ -55,6 +57,7 @@ window.Economy = (() => {
   function settle(s,live=true){
     const regular=Commerce.freeShips(s);
     if(live)Commerce.departures(s);
+    if(live && s.story?.debt)s.story.debt+=20;
     const f=forecast(s,regular);
     // The R&D and advertising invoices have already reduced cash at purchase.
     const available=s.cash+f.net+f.research+f.marketing-f.goodsSales+f.goodsCost-s.exchange.arrears;
@@ -100,9 +103,12 @@ window.Economy = (() => {
   function sum(rows,key){return rows.reduce((a,r)=>a+(r[key]??0),0);}
   function charge(s,amount){if(s.cash<amount)throw Error('보유 자금이 부족합니다.');s.cash-=amount;}
   function researchCost(s,id){return D.techs.find(t=>t.id===id).cost*(s.tech[id]+1);}
-  function research(s,id){
+  function research(s,id,usePoint=false){
     const t=D.techs.find(t=>t.id===id);if(!t||s.tech[id]>=MAX)throw Error('최종 연구 단계입니다.');
-    const cost=researchCost(s,id);charge(s,cost);s.expenses.research+=cost;s.tech[id]++;note(s,'research',t.name+' 연구 완료','Lv.'+s.tech[id]);
+    if(usePoint && !s.story?.points)throw Error('사용할 연구 가속 포인트가 없습니다.');
+    const cost=usePoint?0:researchCost(s,id);
+    charge(s,cost);if(usePoint)s.story.points--;s.expenses.research+=cost;s.tech[id]++;note(s,'research',t.name+' 연구 완료','Lv.'+s.tech[id]);
+    if(Handover.has(s,'mission_first_research'))note(s,'research','연구 성과 기록',t.name+' · '+t.desc+' · Lv.'+s.tech[id]);
   }
   function advertise(s,id){
     const c=D.campaigns.find(c=>c.id===id);if(!c||s.ads.some(a=>a.id===id))throw Error('이미 진행 중인 캠페인입니다.');

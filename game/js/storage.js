@@ -43,7 +43,7 @@ window.LocalSave = (() => {
           if(previous.every(id=>s.leisure.owned.includes(id)))s.leisure.auction.lot=Freeport.nextLot(s,last);
         }
       }
-      const valid=s.version===1&&integer(s.day,1)&&integer(s.tick,0,3)&&integer(s.cash)&&integer(s.seed,0,4294967295)&&finite(s.rep,0,100)&&Number.isSafeInteger(s.realized)
+      const valid=Handover.valid(s.story)&&s.version===1&&integer(s.day,1)&&integer(s.tick,0,3)&&integer(s.cash)&&integer(s.seed,0,4294967295)&&finite(s.rep,0,100)&&Number.isSafeInteger(s.realized)
         &&s.frontier===1&&integer(s.dealSerial)&&Escort.valid(s)&&Staff.valid(s.hr)&&Commerce.valid(s.exchange)&&Commerce.freeShips(s)>=0&&Freight.valid(s.freight,s.day)&&integer(s.expenses.research)&&integer(s.expenses.marketing)&&Tutorial.valid(s.guide)&&Leisure.valid(s.leisure)
         &&Object.keys(s.tech).length===D.techs.length&&D.techs.every(t=>integer(s.tech[t.id],0,3))
         &&items(s.ads,a=>D.campaigns.some(c=>c.id===a.id&&integer(a.left,1,c.days)),3)&&unique(s.ads,a=>a.id)

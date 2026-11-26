@@ -54,7 +54,7 @@ window.UI=(()=>{
       return '<button class="ticker" data-act="stock" data-id="'+r.id+'"><span class="emblem" style="--c:'+d.color+'">'+icon(d.icon)+'</span><div><b class="ticker-id">'+r.id+'</b><small>'+d.name+'</small></div>'+spark(r.history.slice(-20),color)+'<div class="ticker-price">'+fmt(r.price)+'<small class="'+(v<0?'neg':'pos')+'">'+(r.acquired?'상장 폐지':(v<0?'−':'+')+Math.abs(v).toFixed(2)+'%')+'</small></div></button>';
     }).join('');
   }
-  function fleet(s){const k='ship'+E.tier(s);return '<div class="fleet-art">'+thumb(k,48)+thumb(k,48)+thumb(k,48)+'</div><div class="fleet-row"><span>정기편 <b>'+Commerce.freeShips(s)+'척'+(s.freight?' · 계약 1척':'')+(s.exchange.routes.length?' · 지정 '+s.exchange.routes.length+'척':'')+'</b></span><span>선체 <b>MK.'+['I','II','III'][E.tier(s)-1]+'</b></span></div>';}
+  function fleet(s){const k='ship'+E.tier(s);return '<div class="fleet-art">'+thumb(k,48).repeat(Math.min(3,E.fleet(s)))+'</div><div class="fleet-row"><span>정기편 <b>'+Commerce.freeShips(s)+'척'+(s.freight?' · 계약 1척':'')+(s.exchange.routes.length?' · 지정 '+s.exchange.routes.length+'척':'')+'</b></span><span>선체 <b>MK.'+['I','II','III'][E.tier(s)-1]+'</b></span></div>';}
   const logColors={system:'#7cb6f3',fleet:'#8dbef2',finance:'#73e4c7',research:'#ad9bf0',event:'#efad76',market:'#e9bd76',land:'#9fd3a2',marketing:'#cc91bf'};
   function logs(rows){return rows.map(r=>'<div class="log-row"><time>D'+String(r.day).padStart(3,'0')+'</time><i class="event-dot" style="--c:'+(logColors[r.type]||'#73e4c7')+'"></i><strong>'+esc(r.title)+'</strong><span class="detail">'+esc(r.detail)+'</span></div>').join('');}
   function bars(s){
@@ -75,7 +75,7 @@ window.UI=(()=>{
   }
   function research(s){return '<p class="screen-intro">각 기술은 3단계까지 연구할 수 있습니다. 총 연구 레벨 3과 6에서 함선 외형과 추진기가 진화합니다.</p><div class="cards">'+D.techs.map(t=>{
     const lv=s.tech[t.id],cost=E.researchCost(s,t.id);
-    return '<article class="tile"><div class="title-line"><span class="tech-mark">'+icon(t.icon)+'</span><div><h3>'+t.name+'</h3><small class="eyebrow">LEVEL '+lv+' / 3</small></div></div><div class="level">'+[1,2,3].map(i=>'<i class="'+(i<=lv?'filled':'')+'"></i>').join('')+'</div><p class="desc">'+t.desc+'</p>'+btn(lv===3?'연구 완료':money(cost)+' · 연구','research',t.id,lv===3||cost>s.cash)+'</article>';
+    return '<article class="tile"><div class="title-line"><span class="tech-mark">'+icon(t.icon)+'</span><div><h3>'+t.name+'</h3><small class="eyebrow">LEVEL '+lv+' / 3</small></div></div><div class="level">'+[1,2,3].map(i=>'<i class="'+(i<=lv?'filled':'')+'"></i>').join('')+'</div><p class="desc">'+t.desc+'</p>'+(s.story?.points&&lv<3?btn('가속 포인트 1 사용','pointResearch',t.id):'')+btn(lv===3?'연구 완료':money(cost)+' · 연구','research',t.id,lv===3||cost>s.cash)+'</article>';
   }).join('')+'</div>';}
   function ads(s){return '<p class="screen-intro">캠페인 효과는 집행 즉시 적용됩니다. 다른 매체의 매출 보너스는 합산되며, 종료일에 평판 보너스도 만료됩니다.</p><div class="cards">'+D.campaigns.map(c=>{
     const a=s.ads.find(x=>x.id===c.id);

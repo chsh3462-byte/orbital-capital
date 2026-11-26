@@ -3,6 +3,9 @@ window.Records=(()=>{
   // Dates are the local release dates in Korea. Commit references identify milestones
   // within a release, including deployment work that did not change its version.
   const history=[
+    {version:'0.7.0',date:'2026-11-26',title:'대표 취임과 AURA 인계',
+      updates:['새 회사는 수송선 한 척으로 출범합니다. 전임 대표의 녹음과 AURA의 다섯 실습, 정식 CEO 인가와 후속 목표를 추가했습니다.'],
+      development:[['인계 진행 저장','실제 출항·배속·장부 열람·주식 매수에 보상을 연결하고, 단계와 수령 내역을 로컬 세이브 및 JSON 백업에 포함했습니다.']]},
     {version:'0.6.0',date:'2026-11-25',title:'계정과 자금 랭킹',
       updates:['운영 지원에서 회원가입·로그인·로그아웃을 이용하고, 현재 보유 현금을 서버 랭킹에 등록할 수 있습니다.'],
       development:[['계정별 저장과 서버 순위','기존 게스트 슬롯을 보존하고 계정별 슬롯을 추가했습니다. SQLite 파일에 계정과 최근 등록액을 보관하고 동점은 공동 순위로 계산합니다.']]},

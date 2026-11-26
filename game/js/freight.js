@@ -29,6 +29,7 @@ window.Freight = (() => {
   function complete(s) {
     const job = find(s.freight.id);
     Economy.note(s,'finance','계약 운임 입금 · '+job.cargo,job.to+' 인도 · +'+job.fee.toLocaleString('ko-KR')+' CR');
+    if(s.story)s.story.deliveries++;
     s.freight = null;
   }
   function board(s) {

@@ -61,7 +61,7 @@ window.ExchangeUI = (() => {
       const count=lines.reduce((n,l)=>n+l.qty,0),grade=Number(read('routeGrade').value),guard=Number(read('routeGuard').value),limit=C.capacity(s,grade);
       const gain=lines.reduce((n,l)=>n+l.qty*(C.quote(s,to,l.good).bid-C.quote(s,from,l.good).ask),0);
       read('routeQuote').textContent=lines.length&&lines.every(l=>Number.isInteger(l.qty)&&l.qty>0)&&count<=limit&&from!==to?
-        '습격 '+Escort.risk(grade)+'% · 방어 성공 '+Escort.chance(guard)+'% · '+count+' / '+limit+'상자 · 현재 재고 반영 필요 자금 '+UI.money(C.loadingCost(s,{from,lines}))+' · 습격 피해 전 예상 매매손익 '+UI.money(gain)+' (도착 시세에 따라 변동)':'서로 다른 항구와 적재 한도 안의 수량을 선택하세요. 한도 '+limit+'상자';
+        '결산 2회에 1회 왕복 · 습격 '+Escort.risk(grade)+'% · 방어 성공 '+Escort.chance(guard)+'% · '+count+' / '+limit+'상자 · 현재 재고 반영 필요 자금 '+UI.money(C.loadingCost(s,{from,lines}))+' · 습격 피해 전 예상 매매손익 '+UI.money(gain)+' (도착 시세에 따라 변동)':'서로 다른 항구와 적재 한도 안의 수량을 선택하세요. 한도 '+limit+'상자';
     }else if(read('goodsQuote')){
       const n=read('goodsQty').valueAsNumber,q=C.quote(s,place,id);
       read('goodsQuote').textContent=Number.isInteger(n)&&n>=1&&n<=1000?'총 매수액 '+UI.money(q.ask*n)+' · 총 매도액 '+UI.money(q.bid*n):'1~1,000상자를 입력하세요.';

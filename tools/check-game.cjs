@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const runtime = vm.createContext({});
 runtime.window = runtime;
-for (const file of ['data', 'tutorial', 'roulette', 'collection', 'registry', 'salon', 'freeport', 'leisure', 'staff', 'escort', 'bargains', 'commerce', 'freight', 'economy', 'storage']) {
+for (const file of ['data', 'handover-script', 'handover', 'tutorial', 'roulette', 'collection', 'registry', 'salon', 'freeport', 'leisure', 'staff', 'escort', 'bargains', 'commerce', 'freight', 'economy', 'storage']) {
   const source = fs.readFileSync(path.join(__dirname, '../game/js', file + '.js'), 'utf8');
   vm.runInContext(source, runtime, {filename:file + '.js'});
 }
@@ -195,7 +195,7 @@ assert.equal(E.mergerCost(nva,true),Math.ceil(100*nva.price*1.3));
 E.merge(game,'NVA',true);
 assert.equal(game.planets.find(p=>p.id==='orion').owner,'player');
 for(const t of ['warp','cargo','ai'])E.research(game,t);
-assert.equal(E.tier(game),2);assert.equal(E.fleet(game),4);
+assert.equal(E.tier(game),2);assert.equal(E.fleet(game),2);
 const broke = clone(game);broke.cash=0;
 const intact=JSON.stringify(broke);
 assert.throws(()=>E.research(broke,'shield'));assert.equal(JSON.stringify(broke),intact);
@@ -322,3 +322,36 @@ T.crown(b,1);assert.equal(b.cash,start+1000);assert.throws(()=>T.crown(b,6));
 assert.deepEqual(JSON.stringify(clone(b).leisure.tables),JSON.stringify(b.leisure.tables));
 console.log('PASS: exhibition grades and routes, expanded relic auction migration, blackjack resume, baccarat drawing rules and symbol dice payouts.');
 
+{
+  const H=runtime.Handover, s=E.newGame();
+  assert.equal(E.fleet(s),1);assert.equal(s.day,11);
+  assert.equal(H.choose(s,'tutorial_01'),true);
+  let cash=s.cash;
+  assert.equal(H.advance(s,'BUY_FIRST_STOCK_SHARE'),false);
+  assert.ok(H.advance(s,'OPEN_ORBITAL_MAP_OR_SELECT_PLANET'));
+  assert.equal(s.cash,cash+5000);
+  assert.equal(H.advance(s,'OPEN_ORBITAL_MAP_OR_SELECT_PLANET'),false);
+  runtime.Commerce.schedule(s,'nereid','lyra',[{good:'tea',qty:1}]);
+  assert.equal(s.story.scene,'tutorial_02');
+  while(!s.exchange.routes[0].cargo)E.step(s);
+  const resumed=clone(s);
+  assert.equal(resumed.story.scene,'tutorial_03');
+  const rep=resumed.rep;assert.ok(H.advance(resumed,'CHANGE_TIME_SPEED_ABOVE_1X'));assert.equal(resumed.rep,rep+10);
+  assert.ok(H.advance(resumed,'OPEN_PNL_OR_LOGS'));assert.ok(H.advance(resumed,'BUY_FIRST_STOCK_SHARE'));
+  while(!resumed.story.deliveries)E.step(resumed);
+  cash=resumed.cash;H.claim(resumed,'mission_first_trade');assert.equal(resumed.cash,cash+10000);
+  assert.throws(()=>H.claim(clone(resumed),'mission_first_trade'));
+  resumed.cash=2*resumed.story.baseline;H.claim(resumed,'mission_net_worth_2x');
+  cash=resumed.cash;E.research(resumed,'cargo',true);assert.equal(resumed.cash,cash);assert.equal(resumed.story.points,0);
+  assert.throws(()=>E.research(resumed,'warp',true));
+  H.claim(resumed,'mission_first_research');E.research(resumed,'warp');assert.equal(resumed.logs[0].title,'연구 성과 기록');
+  E.buyLand(resumed,'eir');const cost=E.forecast(resumed).fleetCost;H.claim(resumed,'mission_second_outpost');
+  assert.ok(E.forecast(resumed).fleetCost<cost);
+  resumed.cash=1000;H.loan(resumed,false);assert.equal(resumed.cash,21000);assert.throws(()=>H.loan(resumed,false));
+  const day=resumed.day;while(resumed.day===day)E.step(resumed);
+  assert.equal(resumed.story.debt,20020);resumed.cash=30000;H.loan(resumed,true);
+  assert.equal(resumed.cash,9980);assert.equal(clone(resumed).story.debt,0);
+  const old=E.newGame();delete old.story;const legacy=clone(old);assert.equal(E.fleet(legacy),3);
+  H.attach(legacy,3);assert.equal(E.fleet(clone(legacy)),3);
+  console.log('PASS: AURA stages and awards, saved progression, checklist grants, loan repayment and legacy fleet.');
+}

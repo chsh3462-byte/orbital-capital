@@ -28,10 +28,21 @@
     return job;
   }
   function auto(){save().catch(()=>error('자동 저장 실패 · 로컬 저장 공간과 쓰기 권한을 확인하세요.'));}
+  let pendingBackup=null;
+  function storyAction(action){
+    const reward=Handover.advance(state,action);
+    if(reward){$('#metrics').innerHTML=U.metrics(state);notify(reward);auto();}
+    return reward;
+  }
   function drawGuide(){
-    const box=$('#guide'),html=Tutorial.panel(state,page);
+    const box=$('#guide'),html=Handover.panel(state)||Tutorial.panel(state,page);
     if(guideView!==html){box.innerHTML=html;guideView=html;animationBatch=0;}
     box.hidden=!html;
+    const scene=Handover.current(state);
+    document.querySelectorAll('.handover-focus').forEach(el=>el.classList.remove('handover-focus'));
+    if(scene?.highlightTarget)document.querySelector(scene.highlightTarget)?.classList.add('handover-focus');
+    const routeButton=$('#fleet-status-panel [data-act="routeSetup"]');
+    routeButton.disabled=Commerce.freeShips(state)<1;
     map.buttons.nereid.classList.toggle('guide-focus',state.guide.status==='active'&&state.guide.step===0&&!state.guide.seen);
   }
   function inspected(){
@@ -61,6 +72,7 @@
   function nav(target){
     if(!U.nav[target])return;
     if(dialog.open)dialog.close();modal=null;page=target;
+    if(target==='finance')storyAction('OPEN_PNL_OR_LOGS');
     document.querySelectorAll('#nav button').forEach(b=>{b.classList.toggle('on',b.dataset.nav===target);if(b.dataset.nav===target)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
     $('#section-en').textContent=U.nav[target][1];$('#page-title').textContent=U.nav[target][0];
     $('#dashboard').hidden=page!=='dashboard';workspace.hidden=page==='dashboard';render();window.scrollTo(0,0);
@@ -94,7 +106,14 @@
   async function open(kind,id){
     modal={kind,id};const token=modal;
     let title='',body='';
-    if(kind==='collectChoices'){
+    if(kind==='storyIntro'){
+      title='대표 취임 인계';body=Handover.panel(state);
+    }else if(kind==='storyBook'){
+      title='대표 인계 수첩';
+      body=state.story?Handover.handbook(state):'<p>현재 회사의 함대와 거점을 이어받아 AURA 인계를 시작합니다.</p>'+U.btn('현재 회사로 취임 인계 시작','storyEnroll');
+    }else if(kind==='storyRestore'){
+      title='백업 복구 확인';body=U.kv('백업 날짜',U.date(pendingBackup.day))+U.kv('백업 현금',U.money(pendingBackup.cash))+'<p>현재 회사의 자동 저장을 이 백업으로 교체합니다. 수동 저장은 유지합니다.</p>'+U.btn('이 백업으로 복구','storyRestoreConfirm')+U.btn('취소','close','',false,false);
+    }else if(kind==='collectChoices'){
       title=Leisure.get(id).name+' · 인수 조건';body=Bargains.collectorView(state,id,venue);
     }else if(kind==='dealChoices'){
       const q=dealRequest;
@@ -138,6 +157,9 @@
       if(!saveEnabled)body+='<div class="action-row">'+U.btn('현재 게임으로 자동 저장 재개','restoreAuto')+'</div>';
     }
     if(modal!==token)return;
+    if(kind==='planet'&&Commerce.port(id))storyAction('OPEN_ORBITAL_MAP_OR_SELECT_PLANET');
+    if(kind==='logs')storyAction('OPEN_PNL_OR_LOGS');
+    drawGuide();
     const g=state.guide,r=Tutorial.issuer(state);
     const related=g.status==='active'&&[
       kind==='planet'&&id==='nereid',false,kind==='guideWarp',kind==='guideAd',
@@ -150,6 +172,11 @@
     dialog.classList.toggle('wheel-dialog',kind==='casino');
     if(!dialog.open)dialog.showModal();animationBatch=0;
   }
+  function restoreCompany(loaded){
+    state=loaded;spinEnd=0;clock=0;playTime=0;map.pulses=[];map.transit=0;saveEnabled=true;
+    nav(state.guide.status==='active'?Tutorial.chapter(state).page:'dashboard');
+    if(Handover.current(state)?.choices)open('storyIntro');
+  }
   function changed(feedback){
     render();if(modal)open(modal.kind,modal.id);auto();if(!dialog.open)notify(feedback);
   }
@@ -159,11 +186,57 @@
     const a=b.dataset.act,id=b.dataset.id;
     try{
       switch(a){
+        case 'storyEnroll':
+          if(!state.story)Handover.attach(state,3);
+          nav('dashboard');auto();await open('storyIntro');return;
+        case 'storyChoice':
+          if(Handover.choose(state,id)){nav('dashboard');auto();if(Handover.current(state)?.choices)await open('storyIntro');}
+          return;
+        case 'storyTarget':{
+          const step=Handover.current(state)?.step;
+          if(step===1){nav('dashboard');map.buttons.nereid.focus();$('#orbital-trade-map').scrollIntoView({block:'center'});}
+          if(step===2){
+            if(state.freight){nav('freight');notify('계약 화물이 인도되면 다음 항로를 지정하세요.');}
+            else if(Commerce.freeShips(state)>0){exchangePort='nereid';await open('routeSetup','tea');}
+            else{nav('exchange');notify('지정 항로는 다음 결산에 선적합니다. 자금과 운항 상태를 확인하세요.');}
+          }
+          if(step===3)$('#speed').click();
+          if(step===4)nav('finance');
+          if(step===5)nav('stocks');
+          return;
+        }
+        case 'storyBook':await open('storyBook');return;
+        case 'storyClaim':Handover.claim(state,id);changed();return;
+        case 'storyLoan':case 'storyRepay':Handover.loan(state,a==='storyRepay');changed();return;
+        case 'pointResearch':E.research(state,id,true);break;
+        case 'storyExport':{
+          const blob=new Blob([JSON.stringify(state)],{type:'application/json'}),url=URL.createObjectURL(blob);
+          const link=document.createElement('a');link.href=url;link.download='OrbitalCapital-D'+state.day+'.json';link.click();
+          setTimeout(()=>URL.revokeObjectURL(url),30000);return;
+        }
+        case 'storyImport':{
+          const input=document.createElement('input');input.type='file';input.accept='.json,application/json';
+          input.onchange=async()=>{
+            try{
+              const file=input.files[0];if(!file)return;
+              if(file.size>8*1024*1024)throw Error('백업 파일은 8 MiB 이하로 선택하세요.');
+              const restored=LocalSave.validate(JSON.parse(await file.text()));
+              if(!dialog.open||modal?.kind!=='storyBook')return;
+              pendingBackup=restored;await open('storyRestore');
+            }catch{error('복구할 수 없는 백업 파일입니다. 기존 회사는 유지됩니다.');}
+          };
+          input.click();return;
+        }
+        case 'storyRestoreConfirm':
+          if(modal?.kind!=='storyRestore'||!pendingBackup)return;
+          await saveQueue;await LocalSave.write('auto',pendingBackup);
+          restoreCompany(pendingBackup);pendingBackup=null;return;
         case 'recordSection':
           await open('logs',id);
           dialog.querySelector('[data-act="recordSection"][aria-pressed="true"]').focus({preventScroll:true});
           return;
         case 'guideStart':{
+          if(Handover.current(state)){nav('dashboard');if(!Handover.current(state).step)await open('storyIntro');return;}
           const g=state.guide;
           if(g.status==='done'){g.step=0;g.seen=false;}
           g.status='active';visitChapter();return;
@@ -202,9 +275,9 @@
           Staff.recruit(state,{style:$('#hrStyle').value,skill:$('#hrSkill').valueAsNumber,care:$('#hrCare').valueAsNumber,wage:$('#hrWage').valueAsNumber,target:$('#hrTarget').valueAsNumber});
           dialog.close();modal=null;break;
         case 'hrStop':state.hr.open=false;changed('모집을 중지했습니다.');return;
-        case 'freightAccept':Freight.accept(state,id);changed('화물선 한 척을 계약 항로에 배정했습니다.');return;
+        case 'freightAccept':Freight.accept(state,id);changed(storyAction('DISPATCH_FIRST_SHIP')||'화물선 한 척을 계약 항로에 배정했습니다.');return;
         case 'pause':paused=!paused;render();return;
-        case 'speed':speed=speed===4?1:speed*2;render();return;
+        case 'speed':speed=speed===4?1:speed*2;if(speed>1)storyAction('CHANGE_TIME_SPEED_ABOVE_1X');render();return;
         case 'close':dialog.close();return;
         case 'routes':map.routes=!map.routes;b.setAttribute('aria-pressed',String(map.routes));return;
         case 'zoomIn':case 'zoomOut':map.zoom=Math.min(1.15,Math.max(.75,+(map.zoom+(a==='zoomIn'?.10:-.10)).toFixed(2)));return;
@@ -213,7 +286,7 @@
         case 'loads':case 'planet':case 'stock':case 'logs':case 'reviewFriendly':case 'reviewHostile':await open(a,id);return;
         case 'load':{
           await saveQueue;const loaded=await LocalSave.read(id);if(!loaded)throw Error('저장 데이터가 없습니다.');
-          state=loaded;spinEnd=0;clock=0;playTime=0;map.pulses=[];map.transit=0;saveEnabled=true;dialog.close();modal=null;nav(state.guide.status==='active'?Tutorial.chapter(state).page:'dashboard');auto();notify('저장한 게임을 불러왔습니다.');return;
+          restoreCompany(loaded);auto();notify('저장한 게임을 불러왔습니다.');return;
         }
         case 'restoreAuto':saveEnabled=true;await save('auto');dialog.close();notify('자동 저장을 재개했습니다.');return;
         case 'research':E.research(state,id);break;
@@ -254,7 +327,11 @@
         case 'buyLand':E.buyLand(state,id);break;
         case 'build':{const [planet,f]=id.split('/');E.build(state,planet,f);break;}
         case 'buy':case 'sell':{
-          const qty=$('#qty').valueAsNumber;E.trade(state,id,qty,a==='buy');break;
+          const qty=$('#qty').valueAsNumber;E.trade(state,id,qty,a==='buy');
+          if(a==='buy'&&storyAction('BUY_FIRST_STOCK_SHARE')){
+            dialog.close();modal=null;nav('dashboard');await open('storyBook');return;
+          }
+          break;
         }
         case 'friendly':case 'hostile':E.merge(state,id,a==='hostile');dialog.close();modal=null;nav('stocks');break;
         default:return;
@@ -275,9 +352,9 @@
   dialog.addEventListener('close',()=>{if(!dialog.open)modal=null;});
   function frame(now){
     const dt=Math.min(.25,Math.max(0,(now-last)/1000));last=now;
-    const sim=paused||modal||$('#account-dialog').open||document.hidden?0:dt*speed;
+    const sim=paused||Handover.current(state)?.choices||modal||$('#account-dialog').open||document.hidden?0:dt*speed;
     playTime+=sim;clock+=sim;
-    if(clock>=3){clock-=3;const row=E.step(state);if(row){map.payout(row.net+row.research+row.marketing);auto();}render();}
+    if(clock>=3){clock-=3;const priorScene=state.story?.scene;const row=E.step(state);if(priorScene==='tutorial_02'&&state.story.scene==='tutorial_03')notify('첫 항로 개설 보너스 +3,000 CR 지급');if(row){map.payout(row.net+row.research+row.marketing);auto();}render();}
     if(now-lastPaint>=32&&!document.hidden){
       if(page==='dashboard')map.draw(state,playTime,sim?Math.min(.25,(now-lastPaint)/1000)*speed:0);
       if(spinEnd&&now>=spinEnd){spinEnd=0;if(modal?.kind==='casino'&&dialog.open)open('casino');}
@@ -306,5 +383,7 @@
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&state)auto();last=performance.now();});
   window.addEventListener('pagehide',()=>{if(!window.desktopSaves&&saveEnabled&&state)LocalSave.write('auto',state).catch(()=>{});});
   nav(state.guide.status==='active'?Tutorial.chapter(state).page:'dashboard');
-  AccountUI.attach(()=>state.cash,()=>save('auto'));requestAnimationFrame(frame);
+  AccountUI.attach(()=>state.cash,()=>save('auto'));
+  if(Handover.current(state)?.choices&&!$('#account-dialog').open)await open('storyIntro');
+  requestAnimationFrame(frame);
 })();

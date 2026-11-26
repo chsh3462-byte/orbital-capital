@@ -72,11 +72,9 @@ window.Handover=(()=>{
   const targets=['지도에서 행성 선택','화물 적재 및 항로 지정','배속 올리기','일일 재무제표 열기','은하 증권 시장 열기'];
   function panel(s){
     const scene=current(s);if(!scene)return '';
-    let lines=scene.lines;
-    if(s.story.baseFleet===3 && scene.id==='scene_01')lines=[...lines.slice(0,2),'현재 회사의 자금과 함대를 인계서에 반영했다. 운영을 이어가자.'];
-    if(scene.id==='scene_02' && (s.story.baseFleet===3||s.day!==11))lines=[lines[0].replace('2186년 1월 11일',UI.date(s.day)), '보유 함선 '+Economy.fleet(s)+'척, 자사 거점 '+s.planets.filter(p=>p.owner==='player').length+'곳입니다. 일일 유지비를 감당할 수 있는 항로를 확보하세요.',lines[2]];
-    const buttons=scene.choices?scene.choices.map(c=>UI.btn(c.label,'storyChoice',c.nextId,false,!c.skipIntro)).join(''):UI.btn(targets[scene.step-1],'storyTarget');
-    return '<article class="handover"><small>'+scene.role+'</small><h2>'+scene.title+'</h2><b>'+scene.speaker+'</b>'+lines.map(l=>'<p>'+l+'</p>').join('')+'<div class="handover-actions">'+buttons+'</div><p class="hint">'+scene.actionHint+(scene.reward?' · '+scene.reward.message:'')+'</p></article>';
+    if(scene.choices)return '<article class="handover">'+UI.btn('취임 이야기 열기','dockOpen')+'</article>';
+    const portrait=scene.step===2?'pilot':'aura';
+    return '<article class="handover"><small>'+scene.role+'</small><h2>'+scene.title+'</h2><span class="dock-mini art-'+portrait+'" aria-hidden="true"></span><b>'+scene.speaker+'</b>'+scene.lines.map(l=>'<p>'+l+'</p>').join('')+'<div class="handover-actions">'+UI.btn(targets[scene.step-1],'storyTarget')+'</div><p class="hint">'+scene.actionHint+' · '+scene.reward.message+'</p></article>';
   }
   function handbook(s){
     const g=s.story;

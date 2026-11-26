@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const runtime = vm.createContext({});
 runtime.window = runtime;
-for (const file of ['data', 'handover-script', 'handover', 'tutorial', 'roulette', 'collection', 'registry', 'salon', 'freeport', 'leisure', 'staff', 'escort', 'bargains', 'commerce', 'freight', 'economy', 'storage']) {
+for (const file of ['data', 'dock-story', 'handover-script', 'handover', 'tutorial', 'roulette', 'collection', 'registry', 'salon', 'freeport', 'leisure', 'staff', 'escort', 'bargains', 'commerce', 'freight', 'economy', 'storage']) {
   const source = fs.readFileSync(path.join(__dirname, '../game/js', file + '.js'), 'utf8');
   vm.runInContext(source, runtime, {filename:file + '.js'});
 }
@@ -354,4 +354,21 @@ console.log('PASS: exhibition grades and routes, expanded relic auction migratio
   const old=E.newGame();delete old.story;const legacy=clone(old);assert.equal(E.fleet(legacy),3);
   H.attach(legacy,3);assert.equal(E.fleet(clone(legacy)),3);
   console.log('PASS: AURA stages and awards, saved progression, checklist grants, loan repayment and legacy fleet.');
+}
+{
+  const {pages}=runtime.DockStory, company=E.newGame(), visited=new Set();
+  function walk(id,path){
+    if(id==='done')return;
+    assert.ok(pages[id],id);
+    assert.ok(!path.includes(id),'Dialogue loop at '+id);
+    visited.add(id);
+    company.dockPage=id;
+    assert.equal(clone(company).dockPage,id);
+    assert.ok(pages[id].next.length>0);
+    for(const [,next] of pages[id].next)walk(next,[...path,id]);
+  }
+  walk('arrival',[]);
+  assert.equal(visited.size,Object.keys(pages).length);
+  company.dockPage='unlisted';assert.throws(()=>clone(company));
+  console.log('PASS: both dock questions rejoin the story and every saved line reaches the control room.');
 }

@@ -29,6 +29,44 @@
   }
   function auto(){save().catch(()=>error('자동 저장 실패 · 로컬 저장 공간과 쓰기 권한을 확인하세요.'));}
   let pendingBackup=null;
+  const dock=$('#dock-dialog');
+  let dockPage='arrival',dockReplay=false,dockFrame=0;
+  function showDock(page){
+    dockPage=page;
+    dock.innerHTML=DockStory.render(page);
+    cancelAnimationFrame(dockFrame);
+    const line=DockStory.pages[page].line,spoken=dock.querySelector('.dock-spoken');
+    const start=performance.now();
+    function speak(now){
+      const length=Math.min(line.length,Math.max(1,Math.floor((now-start)/20)));
+      spoken.textContent=line.slice(0,length);
+      if(length<line.length&&dock.open)dockFrame=requestAnimationFrame(speak);
+    }
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches)spoken.textContent=line;
+    else dockFrame=requestAnimationFrame(speak);
+    dock.scrollTop=0;
+    if(!dock.open)dock.showModal();
+    dock.querySelector('[data-act="dockNext"]').focus({preventScroll:true});
+  }
+  function beginDock(){
+    dockReplay=state.dockPage==='done';
+    showDock(dockReplay?'arrival':state.dockPage||'arrival');
+  }
+  function finishDock(){
+    cancelAnimationFrame(dockFrame);
+    dock.close();
+    if(dockReplay)return;
+    state.dockPage='done';
+    if(!state.story&&state.guide.status!=='active')Handover.attach(state,3);
+    if(Handover.current(state)?.choices)Handover.choose(state,'tutorial_01');
+    render();auto();
+  }
+  dock.addEventListener('cancel',e=>{e.preventDefault();finishDock();});
+  dock.addEventListener('click',e=>{
+    if(!e.target.closest('.dock-speech'))return;
+    cancelAnimationFrame(dockFrame);
+    dock.querySelector('.dock-spoken').textContent=DockStory.pages[dockPage].line;
+  });
   function storyAction(action){
     const reward=Handover.advance(state,action);
     if(reward){$('#metrics').innerHTML=U.metrics(state);notify(reward);auto();}
@@ -106,11 +144,13 @@
   async function open(kind,id){
     modal={kind,id};const token=modal;
     let title='',body='';
-    if(kind==='storyIntro'){
-      title='대표 취임 인계';body=Handover.panel(state);
-    }else if(kind==='storyBook'){
+    if(kind==='storyBook'){
       title='대표 인계 수첩';
       body=state.story?Handover.handbook(state):'<p>현재 회사의 함대와 거점을 이어받아 AURA 인계를 시작합니다.</p>'+U.btn('현재 회사로 취임 인계 시작','storyEnroll');
+      if(id==='firstShift'){
+        const report=state.story.deliveries?'첫 화물 대금도 장부에 들어왔어요. 수첩 맨 위에 교역 보상도 챙겨 뒀어요.':'첫 화물 대금이 들어오면 이 수첩에 표시해 둘게요.';
+        body='<section class="handover"><span class="dock-mini art-aura"></span><b>아우라 · 대표 비서</b><p>대표님 이름 옆에 마지막 도장을 찍었어요. '+report+' 다음 배는 어디로 보낼까요?</p></section>'+body;
+      }
     }else if(kind==='storyRestore'){
       title='백업 복구 확인';body=U.kv('백업 날짜',U.date(pendingBackup.day))+U.kv('백업 현금',U.money(pendingBackup.cash))+'<p>현재 회사의 자동 저장을 이 백업으로 교체합니다. 수동 저장은 유지합니다.</p>'+U.btn('이 백업으로 복구','storyRestoreConfirm')+U.btn('취소','close','',false,false);
     }else if(kind==='collectChoices'){
@@ -175,7 +215,7 @@
   function restoreCompany(loaded){
     state=loaded;spinEnd=0;clock=0;playTime=0;map.pulses=[];map.transit=0;saveEnabled=true;
     nav(state.guide.status==='active'?Tutorial.chapter(state).page:'dashboard');
-    if(Handover.current(state)?.choices)open('storyIntro');
+    if(state.dockPage!=='done')beginDock();
   }
   function changed(feedback){
     render();if(modal)open(modal.kind,modal.id);auto();if(!dialog.open)notify(feedback);
@@ -186,12 +226,17 @@
     const a=b.dataset.act,id=b.dataset.id;
     try{
       switch(a){
+        case 'dockOpen':beginDock();return;
+        case 'dockNext':
+          if(!dock.open||!DockStory.pages[dockPage].next.some(([,to])=>to===id))return;
+          if(id==='done'){finishDock();return;}
+          if(!dockReplay){state.dockPage=id;auto();}
+          showDock(id);return;
+        case 'dockSkip':if(dock.open)finishDock();return;
         case 'storyEnroll':
           if(!state.story)Handover.attach(state,3);
-          nav('dashboard');auto();await open('storyIntro');return;
-        case 'storyChoice':
-          if(Handover.choose(state,id)){nav('dashboard');auto();if(Handover.current(state)?.choices)await open('storyIntro');}
-          return;
+          if(state.dockPage==='done')Handover.choose(state,'tutorial_01');
+          nav('dashboard');auto();beginDock();return;
         case 'storyTarget':{
           const step=Handover.current(state)?.step;
           if(step===1){nav('dashboard');map.buttons.nereid.focus();$('#orbital-trade-map').scrollIntoView({block:'center'});}
@@ -236,7 +281,7 @@
           dialog.querySelector('[data-act="recordSection"][aria-pressed="true"]').focus({preventScroll:true});
           return;
         case 'guideStart':{
-          if(Handover.current(state)){nav('dashboard');if(!Handover.current(state).step)await open('storyIntro');return;}
+          if(Handover.current(state)){nav('dashboard');if(!Handover.current(state).step)beginDock();return;}
           const g=state.guide;
           if(g.status==='done'){g.step=0;g.seen=false;}
           g.status='active';visitChapter();return;
@@ -329,7 +374,7 @@
         case 'buy':case 'sell':{
           const qty=$('#qty').valueAsNumber;E.trade(state,id,qty,a==='buy');
           if(a==='buy'&&storyAction('BUY_FIRST_STOCK_SHARE')){
-            dialog.close();modal=null;nav('dashboard');await open('storyBook');return;
+            dialog.close();modal=null;nav('dashboard');await open('storyBook','firstShift');return;
           }
           break;
         }
@@ -352,7 +397,7 @@
   dialog.addEventListener('close',()=>{if(!dialog.open)modal=null;});
   function frame(now){
     const dt=Math.min(.25,Math.max(0,(now-last)/1000));last=now;
-    const sim=paused||Handover.current(state)?.choices||modal||$('#account-dialog').open||document.hidden?0:dt*speed;
+    const sim=paused||dock.open||Handover.current(state)?.choices||modal||$('#account-dialog').open||document.hidden?0:dt*speed;
     playTime+=sim;clock+=sim;
     if(clock>=3){clock-=3;const priorScene=state.story?.scene;const row=E.step(state);if(priorScene==='tutorial_02'&&state.story.scene==='tutorial_03')notify('첫 항로 개설 보너스 +3,000 CR 지급');if(row){map.payout(row.net+row.research+row.marketing);auto();}render();}
     if(now-lastPaint>=32&&!document.hidden){
@@ -384,6 +429,9 @@
   window.addEventListener('pagehide',()=>{if(!window.desktopSaves&&saveEnabled&&state)LocalSave.write('auto',state).catch(()=>{});});
   nav(state.guide.status==='active'?Tutorial.chapter(state).page:'dashboard');
   AccountUI.attach(()=>state.cash,()=>save('auto'));
-  if(Handover.current(state)?.choices&&!$('#account-dialog').open)await open('storyIntro');
+  if(state.dockPage!=='done'){
+    if($('#account-dialog').open)$('#account-dialog').addEventListener('close',beginDock,{once:true});
+    else beginDock();
+  }
   requestAnimationFrame(frame);
 })();

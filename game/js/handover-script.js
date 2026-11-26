@@ -1,40 +1,9 @@
 'use strict';
 window.HandoverScript=(()=>{
-const INTRO_SCRIPT = [
-  {
-    id: "scene_01",
-    speaker: "전임 대표 (녹음 메시지)",
-    role: "SYSTEM // LEGACY_LOG_2186.01.11",
-    title: "인계서의 첫 줄",
-    lines: [
-      "이 메시지를 재생하고 있다는 건, 네가 오르빗 캐피탈의 새 대표로 취임했다는 뜻이겠지.",
-      "아스트라 시스템 섹터 07의 9개 행성은 이미 거대 기업들이 항로와 시장을 틀어쥐고 있어.",
-      "우리에게 남은 건 낡은 수송선 한 척과 버티기용 자금뿐이야. 낭비할 시간 없어."
-    ],
-    highlightTarget: null,
-    actionHint: "다음으로 넘어가 인계 내용을 확인하세요.",
-    choices: [
-      { label: "인계서 계속 듣기", nextId: "scene_02" },
-      { label: "스토리 스킵하고 바로 시작", nextId: "tutorial_01", skipIntro: true }
-    ]
-  },
-  {
-    id: "scene_02",
-    speaker: "AI 관제 비서 (AURA)",
-    role: "COMMAND CENTER // OPS_AI",
-    title: "현황 브리핑",
-    lines: [
-      "대표님 취임을 환영합니다. 현재 시각 2186년 1월 11일, 오르빗 캐피탈은 독립 우주 기업으로 등록되어 있습니다.",
-      "보유 함선 1척, 자사 거점 1곳으로 운영이 가능하지만 일일 유지비를 감당하려면 조속한 수익 창출이 필요합니다.",
-      "지금부터 관제실의 핵심 시스템을 순차적으로 안내해 드리겠습니다."
-    ],
-    highlightTarget: "#command-center-header",
-    actionHint: "관제실 상단 날짜와 배속 제어 바를 확인하세요.",
-    choices: [
-      { label: "튜토리얼 시작하기", nextId: "tutorial_01" }
-    ]
-  }
-];
+// Keep both saved scene IDs from the original handover until the dock visit ends.
+const INTRO_SCRIPT = ['scene_01','scene_02'].map(id=>({
+  id, title:'변방의 생존자', choices:[{nextId:'tutorial_01'}]
+}));
 
 const TUTORIAL_SCRIPT = [
   {
@@ -45,8 +14,8 @@ const TUTORIAL_SCRIPT = [
     role: "TUTORIAL 1/5 // ORBITAL MAP",
     title: "궤도 무역 지도 확인",
     lines: [
-      "좌측의 '궤도 무역 지도'를 열어보세요. 섹터 07의 9개 행성 위치와 거점 상태를 한눈에 볼 수 있습니다.",
-      "자사 거점 주변의 미개척 또는 인접 행성을 선택하면 어떤 물자가 싸고 어디서 비싸게 팔리는지 비교할 수 있습니다."
+      "운송장 첫 칸은 네레이드예요. 지도에서 우리 항구를 누르면 해무 찻잎이 특산품으로 뜰 거예요.",
+      "현지 거래장에서 라이라의 매각가도 비교해 보세요. 이안 씨에게 얼마까지 주고 사도 되는지 알려 줄 수 있어요."
     ],
     highlightTarget: "#orbital-trade-map",
     requiredAction: "OPEN_ORBITAL_MAP_OR_SELECT_PLANET",
@@ -61,12 +30,12 @@ const TUTORIAL_SCRIPT = [
     id: "tutorial_02",
     step: 2,
     totalSteps: 5,
-    speaker: "AI 관제 비서 (AURA)",
+    speaker: "화물선 선장 이안",
     role: "TUTORIAL 2/5 // FLEET & CARGO",
     title: "첫 화물 적재 및 출항",
     lines: [
-      "시세 차익이 나는 품목을 확인했다면 '함대 현황'으로 이동해 수송선에 화물을 실으세요.",
-      "왕복 운항 시간과 예상 순이익을 먼저 계산해 두면 손실 항로를 피할 수 있습니다."
+      "이안입니다. 운송장에 네레이드에서 사서 라이라에 파는 걸로 적어 뒀어요. 찻잎을 몇 상자 실을지는 대표님이 정해 주세요.",
+      "항로를 지정하면 다음 결산에 짐을 싣습니다. 취소하기 전까지 같은 항로를 돌 테니 예상 손익도 한번 봐 주세요."
     ],
     highlightTarget: "#fleet-status-panel",
     requiredAction: "DISPATCH_FIRST_SHIP",
@@ -85,8 +54,8 @@ const TUTORIAL_SCRIPT = [
     role: "TUTORIAL 3/5 // TIME CONTROL",
     title: "시간 배속 전환 및 정산",
     lines: [
-      "항선은 실시간 시간 흐름에 따라 이동합니다. 1× 속도가 느리게 느껴진다면 상단 배속 버튼을 2× 이상으로 올려보세요.",
-      "운항이 완료되고 하루가 지나면 일일 정산이 반영됩니다."
+      "부두에서 신호가 왔어요. 배가 나갔습니다. 위쪽의 1×를 눌러 2×로 바꾸고 부두 시계를 조금 빨리 돌려 볼까요?",
+      "지정 항로의 매각 대금은 화물이 도착하는 날 장부에 들어와요."
     ],
     highlightTarget: "#time-speed-controls",
     requiredAction: "CHANGE_TIME_SPEED_ABOVE_1X",
@@ -105,8 +74,8 @@ const TUTORIAL_SCRIPT = [
     role: "TUTORIAL 4/5 // FINANCE & LOGS",
     title: "일일 손익과 운영 기록 점검",
     lines: [
-      "돈을 버는 것만큼 어디서 새는지 파악하는 것도 중요합니다. '일일 손익(재무제표)'과 '운영 기록'을 열어보세요.",
-      "매출, 함선 유지비, 순이익 추이를 확인하면 다음 확장 타이밍을 정확히 잡을 수 있습니다."
+      "전임자가 장부 모서리에 밑줄을 두 번 그어 뒀네요. ‘선장에게 매출을 읽어 주기 전에 유지비를 뺄 것.’",
+      "오늘 재무제표를 열어 매출과 순이익을 나란히 보세요. 어느 배가 언제 움직였는지는 운영 기록에 있어요."
     ],
     highlightTarget: "#daily-pnl-panel",
     requiredAction: "OPEN_PNL_OR_LOGS",
@@ -125,8 +94,8 @@ const TUTORIAL_SCRIPT = [
     role: "TUTORIAL 5/5 // GALACTIC EXCHANGE",
     title: "은하 증권 시장 첫 거래",
     lines: [
-      "마지막으로 '은하 증권 시장(거래소)'을 확인해 보세요. 섹터 내 주요 기업의 주가가 실시간으로 움직입니다.",
-      "여유 자금으로 저가 종목 1주를 매수해 보며 자본 시장의 흐름을 익혀보세요. 이후에는 '연구소' 확장과 거점 확보가 핵심입니다."
+      "저쪽에 예인선 보이죠? 자오선 예항 소속이에요. 항구에서 매일 마주치는 회사도 거래소에선 한 주씩 살 수 있어요.",
+      "마음에 드는 회사를 골라 한 주 사 보세요. 체결되면 대표 인계 수첩에 마지막 도장을 찍어 드릴게요."
     ],
     highlightTarget: "#galactic-exchange-panel",
     requiredAction: "BUY_FIRST_STOCK_SHARE",

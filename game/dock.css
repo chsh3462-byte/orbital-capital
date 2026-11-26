@@ -1,0 +1,27 @@
+.dock-replay,.dock-skip{border:1px solid #685842;background:#27221c;color:#ffdb9f;padding:7px 11px;font:inherit;font-size:.85rem;cursor:pointer}
+#dock-dialog{color:#eee5d0;background:#181c21;width:min(860px,96vw);max-width:96vw;max-height:94vh;max-height:94dvh;padding:0;overflow:auto;border:2px solid #847258;border-radius:0;box-shadow:0 0 0 4px #171b20,0 20px 100px #000b}
+#dock-dialog::backdrop{background:rgba(4,10,16,.94)}
+.dock-top,.dock-choices,.dock-speech header{display:flex;align-items:center;gap:10px}
+.dock-top{padding:8px 16px;justify-content:space-between;border-bottom:1px solid #78664e;background:#201f1f;color:#e8d6ae;font:bold 11px var(--mono);letter-spacing:2px}
+.dock-skip{letter-spacing:normal;font:13px sans-serif;background:transparent;border-color:#554c40}
+.dock-stage{display:grid;grid-template-columns:2fr 1fr;border-bottom:3px solid #887459}
+.dock-art,.dock-mini{background-image:url("assets/dock-prologue.png");background-size:200% 200%;image-rendering:pixelated}
+.dock-art{aspect-ratio:3/2;position:relative;align-self:center}
+.art-harbor{background-position:left top}.art-clerk{background-position:right top}.art-pilot{background-position:left bottom}.art-aura{background-position:right bottom}
+.dock-art.art-aura::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(transparent 48%,#9efbe314 50%,transparent 52%);background-size:100% 200%;animation:dock-scan 5s linear infinite}
+@keyframes dock-scan{to{background-position:0 200%}}
+.dock-file{position:static;width:auto;height:auto;display:flex;flex-direction:column;padding:clamp(12px,2vw,24px);color:#e9d9be;background:#302b26;border-left:2px solid #847258}
+.dock-file small,.dock-ticket span,.dock-speech header span{font:12px var(--mono);letter-spacing:.04em}
+.dock-file>small{color:#baa98e}.dock-file h2{font-size:clamp(19px,2.5vw,30px);letter-spacing:-.06em;margin:9px 0 4px;color:#fff4d7}
+.dock-file p{margin:0;font-size:14px;color:#e2caaa}
+.dock-ticket{margin-top:auto;padding:16px 13px 12px;background:#e1c99d;color:#392d25;border-top:4px solid #a58964;box-shadow:2px 3px #161819;transform:rotate(-1deg)}
+.dock-ticket strong,.dock-ticket span{display:block}.dock-ticket strong{margin:6px 0 18px;font-size:15px}.dock-ticket span{border-top:1px dashed #907959;padding-top:8px}
+.dock-ticket{position:relative}.dock-ink{position:absolute;right:8px;bottom:4px;border:3px double #9a4731;color:#8a3d2d;font:bold 13px sans-serif;padding:3px;transform:rotate(-12deg)}
+.dock-speech{padding:18px clamp(16px,3vw,30px) 4px}.dock-speech header b{color:#ffd095;font-size:18px}.dock-speech header span{color:#b5c5c4}
+.dock-speech p{font-size:clamp(16px,1.6vw,20px);line-height:1.65;color:#f6efdf;word-break:keep-all;margin:9px 0}
+.dock-speech p{position:relative}.dock-reader{opacity:0}.dock-spoken{position:absolute;inset:0}
+.dock-choices{padding:8px clamp(16px,3vw,30px) 18px;flex-wrap:wrap}.dock-choices .btn{white-space:normal;height:auto;min-height:38px}
+.dock-mini{width:75px;aspect-ratio:3/2;float:left;margin:2px 13px 4px 0;border:1px solid #60716c}
+#dock-dialog button:focus-visible,.dock-replay:focus-visible{outline:2px solid #fff4cc;outline-offset:2px}
+@media(max-width:600px){.dock-stage{display:flex;flex-direction:column}.dock-art{width:100%;max-width:470px}.dock-file{width:100%;border-left:0;border-top:1px solid #847258;padding:9px 15px;display:grid;grid-template-columns:1fr 1.3fr;align-items:center;gap:1px 8px}.dock-file>small{display:none}.dock-file h2{margin:0;font-size:19px}.dock-file p{font-size:12px;grid-column:1}.dock-ticket{grid-row:1/3;grid-column:2;margin:0;padding:5px 8px;border-top:0}.dock-ticket span{display:none}.dock-ticket strong{margin:2px 0;font-size:12px}.dock-replay{padding:5px;font-size:12px}.dock-choices{gap:5px}}
+@media(prefers-reduced-motion:reduce){.dock-art.art-aura::after{animation:none}}

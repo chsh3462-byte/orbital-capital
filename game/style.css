@@ -10,15 +10,6 @@ main{margin-left:188px;padding:29px clamp(17px,2.1vw,36px) 16px;max-width:2200px
 @media(max-width:485px){.side{width:46px;padding-inline:3px}.brand svg{width:29px}.profile{display:none}.side-bottom{padding-bottom:8px}main{margin-left:46px;padding:14px 8px}.date{display:none}.overline{font-size:8px}.right-stack{grid-template-columns:1fr}.metric{padding:10px}.metric .mini{width:20%}.map-stage{min-height:270px}.map-legend{gap:7px}.log-row .detail{max-width:32%}.cards{grid-template-columns:1fr}.node-label{font-size:10px}}
 
 
-#guide{margin:0 0 16px;border:1px solid #31554e;border-radius:6px;background:linear-gradient(110deg,#172d2a 0%,#152326 45%,#141d25 100%);overflow:hidden}
-.guide-offer,.guide-main,.guide-actions,.guide-task{display:flex;align-items:center;gap:13px}
-.guide-offer,.guide-main{padding:13px 16px}.guide-copy{flex:1;min-width:0}.guide-copy small,.guide-note small{font-size:.77rem;font-weight:600;color:#91d0ba;letter-spacing:.02em}
-.guide-copy h2{font-size:1.08rem;margin:3px 0;letter-spacing:-.5px}.guide-copy p,.guide-task p,.guide-note p{font-size:.91rem;line-height:1.6;color:#c0cdd3}.dispatch-icon{flex:none;width:50px;height:50px;display:grid;place-items:center;border:1px solid #365650;background:repeating-linear-gradient(0deg,#0f1c22 0px,#0f1c22 3px,#12232a 4px);border-radius:4px}
-.guide-actions{flex-wrap:wrap;gap:6px;flex-shrink:0}.guide-actions .btn{font-size:.84rem;white-space:nowrap}.guide-task{padding:10px 16px;border-top:1px solid #28413c;background:#0f1a1c88;justify-content:space-between}.guide-task b{font-size:.77rem;color:#a6c7ad}.guide-task p{margin-top:2px}
-.guide-note{margin-top:16px;padding:12px 14px;background:#172b28;border:1px solid #31534b;border-radius:4px}.guide-note p{margin:5px 0}.guide-note button{margin-top:5px}
-.node-label.guide-focus{outline:2px solid #9bf4d5;outline-offset:3px}
-@media(max-width:800px){.guide-offer,.guide-task{flex-wrap:wrap}.guide-actions{flex-shrink:1}.guide-offer .guide-actions{margin-left:auto}}
-@media(max-width:485px){.guide-offer,.guide-main,.guide-task{padding:10px}.guide-offer .dispatch-icon,.guide-main .dispatch-icon{display:none}.guide-offer{display:grid}.guide-offer .guide-actions{margin-left:0}.guide-actions .btn{padding:6px 9px}.guide-copy p,.guide-task p{font-size:.87rem}}
 @media(max-height:700px){.side{overflow-y:auto}.brand{margin-bottom:18px}.side-bottom .side-section{padding-top:12px}}
 .side{overflow-y:auto}
 .field select{min-width:8rem;background:#111c25;color:#deefe9;border:1px solid #40535d;border-radius:4px;padding:7px;font:inherit}

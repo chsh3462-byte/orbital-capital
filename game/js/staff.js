@@ -8,7 +8,6 @@ window.Staff = (() => {
     return p&&Object.hasOwn(styles,p.style)&&integer(p.skill,0,100)&&integer(p.care,0,100)&&integer(p.wage,1,500)&&integer(p.target,1,24);
   }
   function recruit(s,policy){
-    Campaign.requireAccess(s,'personnel');
     if(!validPolicy(policy))throw Error('점수는 0~100, 일급 상한은 1~500 CR, 목표 인원은 1~24명으로 입력하세요.');
     s.hr.policy={...policy}; s.hr.open=s.hr.team.length<policy.target;
     Economy.note(s,'system','채용 기준 적용',styles[policy.style]+' · 목표 '+policy.target+'명');

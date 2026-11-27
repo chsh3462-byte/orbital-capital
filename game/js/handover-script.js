@@ -21,8 +21,7 @@ const TUTORIAL_SCRIPT = [
     requiredAction: "OPEN_ORBITAL_MAP_OR_SELECT_PLANET",
     actionHint: "궤도 무역 지도에서 자사 거점과 거래할 인접 행성을 클릭하세요.",
     reward: {
-      cash: 500,
-      message: "초기 물류 보조금 +500 CR 지급"
+      message: "행성 거래 정보를 확인했습니다."
     },
     nextId: "tutorial_02"
   },
@@ -41,8 +40,7 @@ const TUTORIAL_SCRIPT = [
     requiredAction: "DISPATCH_FIRST_SHIP",
     actionHint: "수송선에 화물을 적재하고 목표 행성으로 출항시키세요.",
     reward: {
-      cash: 500,
-      message: "첫 항로 개설 보너스 +500 CR 지급"
+      message: "첫 운송선이 출항했습니다."
     },
     nextId: "tutorial_03"
   },
@@ -61,8 +59,8 @@ const TUTORIAL_SCRIPT = [
     requiredAction: "CHANGE_TIME_SPEED_ABOVE_1X",
     actionHint: "시간 배속을 2× 이상으로 변경해 운항과 일일 흐름을 진행하세요.",
     reward: {
-      cash: 500, reputation: 10,
-      message: "배속 실습 +500 CR 지급 · 신뢰도 +10"
+      reputation: 10,
+      message: "배속 실습 완료 · 신뢰도 +10"
     },
     nextId: "tutorial_04"
   },
@@ -81,8 +79,7 @@ const TUTORIAL_SCRIPT = [
     requiredAction: "OPEN_PNL_OR_LOGS",
     actionHint: "일일 손익(재무제표) 또는 운영 기록 메뉴를 열어 내역을 확인하세요.",
     reward: {
-      cash: 500,
-      message: "재무 감사 완료 지원금 +500 CR 지급"
+      message: "일일 장부를 확인했습니다."
     },
     nextId: "tutorial_05"
   },
@@ -101,9 +98,8 @@ const TUTORIAL_SCRIPT = [
     requiredAction: "BUY_FIRST_STOCK_SHARE",
     actionHint: "은하 증권 시장에서 원하는 종목 1주를 매수해 튜토리얼을 완료하세요.",
     reward: {
-      cash: 500,
       title: "정식 CEO 인가",
-      message: "튜토리얼 완료! 정식 CEO 인가 및 +500 CR 지급"
+      message: "첫 근무를 마쳤습니다. 정식 CEO 인가"
     },
     nextId: "completed"
   }

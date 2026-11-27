@@ -45,14 +45,8 @@ window.Aura = (() => {
       const line=step>=4?scene.lines[1]:scene.lines[0];
       return say(line,step===4?'think':'explain',labels[step-1],'storyTarget');
     }
-    if(state.guide.status==='active'){
-      const chapter=Tutorial.chapter(state);
-      return state.guide.seen?say(Tutorial.insight(state),'happy',state.guide.step===7?'인계 마치기':'다음 인계','guideNext'):
-        say(chapter.task,'explain',chapter.action,'guideTarget');
-    }
     if(kind==='storyBook')return say(modal.id==='firstShift'?'첫 교대를 마쳤어요, 대표님. 다음 배도 같이 준비해요.':'여기서 달성한 목표의 보상을 받거나 회사 장부를 백업할 수 있어요.',modal.id==='firstShift'?'happy':'calm');
-    if(!kind&&!Campaign.allowed(state,'mergers'))return say((tips[page]||tips.dashboard)+' 다음 허가는 '+Campaign.next(state)+'이에요.','calm','챕터 기록','chapterBoard');
-    return say(tips[page]||tips.dashboard,'calm',kind?'':'운영 실습 하기',kind?'':'guideStart');
+    return say(tips[page]||tips.dashboard,'calm',kind?'':'대표 수첩',kind?'':'storyBook');
   }
 
   function mount(refresh){
@@ -60,7 +54,7 @@ window.Aura = (() => {
     const toggle=root.querySelector('.aura-toggle'),bubble=root.querySelector('.aura-bubble');
     const caption=root.querySelector('.aura-caption'),line=root.querySelector('.aura-line'),action=root.querySelector('.aura-action');
     const key='orbital.aura.folded.'+(AccountUI.profile||'guest');
-    let folded=false,previousState,previousStep,smileUntil=0,issue='',scope='',timer,lastTransmission='';
+    let folded=false,previousState,previousStep,smileUntil=0,issue='',scope='',timer;
     try{folded=localStorage.getItem(key)==='1';}catch{}
     toggle.addEventListener('click',()=>{
       folded=!folded;
@@ -87,24 +81,14 @@ window.Aura = (() => {
         clearTimeout(timer);timer=setTimeout(refresh,2150);
       }
       previousState=state;previousStep=step;scope=nextScope;
-      const transmission=context?.kind==='account'?null:Campaign.pending(state);
-      const receipt=transmission?state.campaign.level+'/'+state.campaign.read:'';
-      if(transmission&&lastTransmission!==receipt){
-        folded=false;document.body.classList.remove('aura-folded');
-      }
-      lastTransmission=receipt;
-      const tip=transmission?{line:transmission.line,mood:'happy',act:'chapterRead',label:transmission.more?'다음 안내':'통신 확인'}:advice(state,page,context,paused);
+      const tip=advice(state,page,context,paused);
       const mood=issue?'concern':performance.now()<smileUntil&&tip.mood!=='concern'?'happy':tip.mood;
       if(face.dataset.mood!==mood)face.dataset.mood=mood;
       root.classList.toggle('folded',folded);bubble.hidden=folded;
       toggle.setAttribute('aria-expanded',String(!folded));
       toggle.setAttribute('aria-label',folded?'AURA 안내 펼치기':'AURA 안내 접기');
-      caption.textContent=step>=1&&step<=5?'취임 실습 '+step+'/5':state.guide.status==='active'?'근무 인계 '+(state.guide.step+1)+'/8':'대표 비서';
-      if(transmission)caption.textContent=transmission.title;
-      const advanced=!transmission&&state.guide.status==='active'&&!Handover.current(state)&&context?.kind!=='account';
-      root.querySelector('.aura-back').hidden=!advanced||!state.guide.step;
-      root.querySelector('.aura-later').hidden=!advanced;
-      const message=transmission?tip.line:issue||tip.line;
+      caption.textContent=step>=1&&step<=5?'취임 실습 '+step+'/5':'대표 비서';
+      const message=issue||tip.line;
       if(line.textContent!==message)line.textContent=message;
       action.hidden=!tip.act;action.dataset.act=tip.act;action.textContent=tip.label;
     }

@@ -40,7 +40,6 @@ window.Commerce = (() => {
   }
   function trade(s,place,id,qty,buy,invoice) {
     if(!port(place)||!byId(id)||!integer(qty,1,1000))throw Error('품목과 1~1,000상자의 정수 수량을 선택하세요.');
-    Campaign.requireAccess(s,place);Campaign.requireAccess(s,byId(id).origin);
     const q=quote(s,place,id),total=invoice??qty*(buy?q.ask:q.bid);
     if(!integer(total,buy?1:0))throw Error('올바른 거래 금액이 아닙니다.');
     if(buy){
@@ -66,8 +65,6 @@ window.Commerce = (() => {
   }
   function schedule(s,from,to,lines,grade=1,guard=0) {
     if(!integer(grade,1,4)||!port(from)||!port(to)||from===to||!manifest(lines)||lines.reduce((n,l)=>n+l.qty,0)>capacity(s,grade))throw Error('서로 다른 항구와 적재 한도 안의 화물 목록을 지정하세요.');
-    Campaign.requireAccess(s,from);Campaign.requireAccess(s,to);
-    for(const line of lines)Campaign.requireAccess(s,byId(line.good).origin);
     if(freeShips(s)<1)throw Error('배정할 정기편 화물선이 없습니다.');
     const route={id:s.exchange.serial+1,from,to,lines:lines.map(l=>({...l})),cargo:null,stop:false,trips:0,profit:0,grade,guard:0};
     Escort.assign(s,route,guard);s.exchange.serial++;s.exchange.routes.push(route);

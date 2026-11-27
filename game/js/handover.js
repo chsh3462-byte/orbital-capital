@@ -27,7 +27,6 @@ window.Handover=(()=>{
   function attach(s,baseFleet){
     s.story=initial(baseFleet);
     s.story.baseline=Math.max(1,worth(s));
-    if(s.guide.status!=='done')s.guide.status='later';
   }
   function choose(s,id){
     if(!current(s)?.choices?.some(c=>c.nextId===id))return false;
@@ -37,7 +36,7 @@ window.Handover=(()=>{
     const scene=current(s);
     if(!scene||scene.requiredAction!==action)return false;
     const reward=scene.reward;
-    s.story.scene=scene.nextId;s.cash+=reward.cash||0;
+    s.story.scene=scene.nextId;
     s.rep=Math.min(100,s.rep+(reward.reputation||0));
     Economy.note(s,'system',scene.title,reward.message);
     return reward.message;

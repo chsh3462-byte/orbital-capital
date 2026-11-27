@@ -28,7 +28,6 @@ window.LocalSave = (() => {
       if(s.version===1&&s.hr===undefined)s.hr=Staff.initial();
       if(s.version===1&&s.freight===undefined)s.freight=null;
       if(s.version===1&&s.expenses===undefined)s.expenses={research:0,marketing:0};
-      if(s.version===1&&s.guide===undefined)s.guide=Tutorial.initial();
       if(s.version===1&&s.leisure===undefined)s.leisure=Leisure.initial();
       if(s.version===1&&s.leisure){
         const oldFour=s.leisure.tables===undefined;
@@ -44,7 +43,7 @@ window.LocalSave = (() => {
         }
       }
       const valid=DockStory.valid(s.dockPage)&&Handover.valid(s.story)&&s.version===1&&integer(s.day,1)&&integer(s.tick,0,3)&&integer(s.cash)&&integer(s.seed,0,4294967295)&&finite(s.rep,0,100)&&Number.isSafeInteger(s.realized)
-        &&s.frontier===1&&integer(s.dealSerial)&&Escort.valid(s)&&Staff.valid(s.hr)&&Commerce.valid(s.exchange)&&Commerce.freeShips(s)>=0&&Freight.valid(s.freight,s.day)&&integer(s.expenses.research)&&integer(s.expenses.marketing)&&Tutorial.valid(s.guide)&&Leisure.valid(s.leisure)
+        &&s.frontier===1&&integer(s.dealSerial)&&Escort.valid(s)&&Staff.valid(s.hr)&&Commerce.valid(s.exchange)&&Commerce.freeShips(s)>=0&&Freight.valid(s.freight,s.day)&&integer(s.expenses.research)&&integer(s.expenses.marketing)&&Leisure.valid(s.leisure)
         &&Object.keys(s.tech).length===D.techs.length&&D.techs.every(t=>integer(s.tech[t.id],0,3))
         &&items(s.ads,a=>D.campaigns.some(c=>c.id===a.id&&integer(a.left,1,c.days)),3)&&unique(s.ads,a=>a.id)
         &&(s.event===null||D.events.some(e=>e.id===s.event.id&&integer(s.event.left,1,e.days)))
@@ -56,8 +55,9 @@ window.LocalSave = (() => {
         &&items(s.history,h=>['day','cash','trade','facility','dividend','fleetCost','landCost','risk','revenue','cost','share','rep'].every(k=>finite(h[k]))&&Number.isSafeInteger(h.net)&&['marketing','research','contract','goodsSales','goodsCost','wages'].every(k=>h[k]===undefined||integer(h[k])),180)&&s.history.length>0
         &&items(s.quarters,q=>['q','revenue','cost'].every(k=>integer(q[k]))&&Number.isSafeInteger(q.net)&&['trade','facility','dividend','fleetCost','landCost','risk','research','marketing','contract','goodsSales','goodsCost','wages','share','rep'].every(k=>q[k]===undefined||finite(q[k])));
       if(valid){
-        Campaign.migrate(s);
-        if(Campaign.valid(s.campaign))return s;
+        // Retire the two former story trackers when opening older company files.
+        delete s.campaign;delete s.guide;
+        return s;
       }
     }catch{}
     throw Error('저장 형식 또는 게임 데이터가 손상되었습니다.');

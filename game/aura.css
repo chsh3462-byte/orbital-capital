@@ -25,7 +25,7 @@ body.aura-on main{padding-bottom:205px}body.aura-on.aura-folded main{padding-bot
 @keyframes aura-talk{30%{opacity:1}75%{opacity:0}}
 .aura-bubble{margin-left:calc(var(--portrait) + 10px);min-height:calc(var(--portrait) - 25px)}
 .aura-line{font-size:13px;line-height:1.55;word-break:keep-all;margin:2px 0 0}
-.aura-back,.aura-later{color:#acbebb;font-size:12px;padding:5px 3px}.aura-action{margin:7px 0 0;padding:4px 9px;color:#bcf4e4;border:1px solid #47766c;border-radius:3px;font-size:12px;background:#173831}
+.aura-action{margin:7px 0 0;padding:4px 9px;color:#bcf4e4;border:1px solid #47766c;border-radius:3px;font-size:12px;background:#173831}
 .aura-helper button:focus-visible{outline:2px solid #ffe2a8;outline-offset:2px}
 .aura-helper.folded{--portrait:38px;width:auto;padding:6px}.folded .aura-toggle{min-height:var(--portrait);gap:9px}
 .folded .aura-caption{display:none}.folded .aura-chevron{transform:rotate(225deg)}
@@ -36,6 +36,3 @@ dialog:has(>.aura-helper) .dialog-head{flex:none}
 dialog:has(>.aura-helper) #dialog-body,dialog:has(>.aura-helper) .account-content{min-height:0;overflow:auto}
 @media(max-width:600px){.aura-helper{--portrait:48px;padding:7px;width:min(310px,calc(100vw - 60px))}body>.aura-helper{right:6px;bottom:max(6px,env(safe-area-inset-bottom))}.aura-line{font-size:12px}.aura-toggle{min-height:23px}.aura-id{gap:5px}}
 @media(prefers-reduced-motion:reduce){.aura-face::before,.aura-face::after{animation:none!important}}
-
-#chapter-status{margin-top:5px;padding:2px 6px;border:1px solid #375652;border-radius:3px;color:#abd9ce;font-size:12px}
-#nav button:disabled{color:#77818a;opacity:.65;cursor:default}

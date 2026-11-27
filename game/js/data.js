@@ -12,14 +12,14 @@ window.GameData = (() => {
     {id:'calyx',name:'칼릭스',code:'CAL-13',sprite:'planetMoss',owner:null,price:46000,x:.43,y:.61}
   ];
   const rivals = [
-    {id:'HEL',name:'헬리오스 물류',en:'Helios Logistics',color:'#ffae68',icon:'sun',price:1620,weight:32},
-    {id:'NVA',name:'노바 다이내믹스',en:'Nova Dynamics',color:'#b491ff',icon:'nova',price:2380,weight:28},
-    {id:'AXM',name:'액시엄 테크',en:'Axiom Tech',color:'#63b3ff',icon:'layers',price:1940,weight:22},
-    {id:'TOW',name:'자오선 예항',en:'Meridian Towing',color:'#a9ccaa',icon:'route',price:980,weight:9,ships:1,specialty:'항만 예인 · 연안 화물선 1척'},
-    {id:'POL',name:'극광 냉장해운',en:'Polar Cold Freight',color:'#92c8ff',icon:'box',price:1380,weight:12,ships:2,specialty:'저온 특산물 운송 · 냉장 화물선 2척'},
-    {id:'LUX',name:'미라 등광유리',en:'Mira Beacon Glass',color:'#e7c380',icon:'sun',price:1730,weight:12,specialty:'미라 조명유리 공단'},
-    {id:'SEL',name:'세린 염광조합',en:'Serein Salterns',color:'#abceda',icon:'layers',price:1180,weight:10,specialty:'세린 결정염 생산 기지'},
-    {id:'ARC',name:'변경 호송해운',en:'Arc Convoy',color:'#9cd7ab',icon:'shield',price:2130,weight:14,ships:2,specialty:'변경 항로 운송 · 화물선 2척'}
+    {id:'HEL',volatility:.068,name:'헬리오스 물류',en:'Helios Logistics',color:'#ffae68',icon:'sun',price:1620,weight:32},
+    {id:'NVA',volatility:.068,name:'노바 다이내믹스',en:'Nova Dynamics',color:'#b491ff',icon:'nova',price:2380,weight:28},
+    {id:'AXM',volatility:.029,name:'액시엄 테크',en:'Axiom Tech',color:'#63b3ff',icon:'layers',price:1940,weight:22},
+    {id:'TOW',volatility:.019,name:'자오선 예항',en:'Meridian Towing',color:'#a9ccaa',icon:'route',price:980,weight:9,ships:1,specialty:'항만 예인 · 연안 화물선 1척'},
+    {id:'POL',volatility:.036,name:'극광 냉장해운',en:'Polar Cold Freight',color:'#92c8ff',icon:'box',price:1380,weight:12,ships:2,specialty:'저온 특산물 운송 · 냉장 화물선 2척'},
+    {id:'LUX',volatility:.036,name:'미라 등광유리',en:'Mira Beacon Glass',color:'#e7c380',icon:'sun',price:1730,weight:12,specialty:'미라 조명유리 공단'},
+    {id:'SEL',volatility:.019,name:'세린 염광조합',en:'Serein Salterns',color:'#abceda',icon:'layers',price:1180,weight:10,specialty:'세린 결정염 생산 기지'},
+    {id:'ARC',volatility:.029,name:'변경 호송해운',en:'Arc Convoy',color:'#9cd7ab',icon:'shield',price:2130,weight:14,ships:2,specialty:'변경 항로 운송 · 화물선 2척'}
   ];
   const techs = [
     {id:'warp',name:'워프 추진기',desc:'레벨당 항로 회전율 +18%',cost:18500,icon:'rocket'},
@@ -34,10 +34,10 @@ window.GameData = (() => {
     {id:'expo',name:'은하 박람회',cost:26000,days:16,boost:.33,rep:10,icon:'credits'}
   ];
   const facilities = [
-    {id:'spaceport',name:'우주 공항',cost:16000,income:1900},
-    {id:'refinery',name:'궤도 정제소',cost:22000,income:2800},
-    {id:'resort',name:'성간 리조트',cost:32000,income:3900},
-    {id:'lab',name:'양자 연구소',cost:46000,income:5600}
+    {id:'spaceport',name:'우주 공항',cost:30000,income:1200},
+    {id:'refinery',name:'궤도 정제소',cost:46000,income:1750},
+    {id:'resort',name:'성간 리조트',cost:72000,income:2250},
+    {id:'lab',name:'양자 연구소',cost:110000,income:2950}
   ];
   const events = [
     {id:'boom',name:'물류 호황',desc:'운송 매출 +35%',days:4,mult:1.35},

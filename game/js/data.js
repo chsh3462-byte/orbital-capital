@@ -28,6 +28,7 @@ window.GameData = (() => {
     {id:'opal',name:'오팔',galaxy:'prism',code:'PRI-01',sprite:'planetPearl',owner:null,price:148000,x:.30,y:.25},
     {id:'rill',name:'릴',galaxy:'prism',code:'PRI-02',sprite:'planetMoss',owner:null,price:96000,x:.72,y:.69},
     {id:'nix',name:'닉스',galaxy:'prism',code:'PRI-03',sprite:'planetIce',owner:null,price:134000,x:.18,y:.63}
+  );
   const techs = [
     {id:'warp',name:'워프 추진기',desc:'레벨당 항로 회전율 +18%',cost:18500,icon:'rocket'},
     {id:'cargo',name:'양자 화물칸',desc:'레벨당 운송 단가 +22%',cost:22000,icon:'box'},

@@ -26,6 +26,7 @@ window.GameData = (() => {
     {id:'lumen',name:'루멘',galaxy:'vesper',code:'VES-02',sprite:'planetAmber',owner:null,price:116000,x:.76,y:.39},
     {id:'brine',name:'브린',galaxy:'vesper',code:'VES-03',sprite:'planetBlue',owner:null,price:78000,x:.36,y:.76},
     {id:'opal',name:'오팔',galaxy:'prism',code:'PRI-01',sprite:'planetPearl',owner:null,price:148000,x:.30,y:.25},
+    {id:'rill',name:'릴',galaxy:'prism',code:'PRI-02',sprite:'planetMoss',owner:null,price:96000,x:.72,y:.69},
   const techs = [
     {id:'warp',name:'워프 추진기',desc:'레벨당 항로 회전율 +18%',cost:18500,icon:'rocket'},
     {id:'cargo',name:'양자 화물칸',desc:'레벨당 운송 단가 +22%',cost:22000,icon:'box'},

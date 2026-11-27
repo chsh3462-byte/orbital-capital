@@ -77,7 +77,7 @@ window.PixelArt=(()=>{
       }
       canvas.addEventListener('click',e=>{
         const rect=canvas.getBoundingClientRect(),x=(e.clientX-rect.left)*this.w/rect.width,y=(e.clientY-rect.top)*this.h/rect.height;
-        for(const p of [...nodes].reverse()){const a=this.point(p);if(Math.hypot(a.x-x,a.y-y)<(p.id==='hq'?42:24)*this.zoom){select(p.id);break;}}
+        for(const p of [...nodes].reverse()){if(this.buttons[p.id].hidden)continue;const a=this.point(p);if(Math.hypot(a.x-x,a.y-y)<(p.id==='hq'?42:24)*this.zoom){select(p.id);break;}}
       });
     }
     point(p){return {x:((p.x-.5)*this.zoom+.5)*this.w,y:((p.y-.5)*this.zoom+.5)*this.h};}
@@ -90,7 +90,7 @@ window.PixelArt=(()=>{
       ctx.imageSmoothingEnabled=false;ctx.drawImage(this.bg,0,0);
       ctx.lineWidth=1;
       const home=this.point(HQ),routes=[];
-      GameData.planets.forEach((p,i)=>{
+      Campaign.ports(s).forEach((p,i)=>{
         const dest=this.point(p),middle={x:(home.x+dest.x)/2+(i%2?8:-12),y:(home.y+dest.y)/2-(i%2?17:-11)};
         const at=u=>({x:(1-u)**2*home.x+2*u*(1-u)*middle.x+u*u*dest.x,y:(1-u)**2*home.y+2*u*(1-u)*middle.y+u*u*dest.y});
         routes.push(at);
@@ -100,6 +100,8 @@ window.PixelArt=(()=>{
       });
       ctx.strokeStyle='#396d76';ctx.setLineDash([2,5]);ctx.beginPath();ctx.ellipse(home.x,home.y+2,58*this.zoom,19*this.zoom,-.12,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
       for(const p of nodes){
+        this.buttons[p.id].hidden=!Campaign.allowed(s,p.id);
+        if(this.buttons[p.id].hidden)continue;
         const a=this.point(p),isHQ=p.id==='hq',width=(isHQ?106:p.id==='lyra'?59:p.id==='orion'?44:41)*this.zoom;
         const state=s.planets.find(x=>x.id===p.id),color=colors[isHQ?'player':state.owner||'free'];
         sprite(ctx,p.sprite,a.x,a.y,width,t+p.x);

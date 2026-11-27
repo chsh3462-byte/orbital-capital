@@ -6,14 +6,16 @@ const path = require('node:path');
 const vm = require('node:vm');
 const runtime = vm.createContext({});
 runtime.window = runtime;
-for (const file of ['data', 'dock-story', 'handover-script', 'handover', 'tutorial', 'roulette', 'collection', 'registry', 'salon', 'freeport', 'leisure', 'staff', 'escort', 'bargains', 'commerce', 'freight', 'economy', 'storage']) {
+for (const file of ['data', 'campaign', 'dock-story', 'handover-script', 'handover', 'tutorial', 'roulette', 'collection', 'registry', 'salon', 'freeport', 'leisure', 'staff', 'escort', 'bargains', 'commerce', 'freight', 'economy', 'storage']) {
   const source = fs.readFileSync(path.join(__dirname, '../game/js', file + '.js'), 'utf8');
   vm.runInContext(source, runtime, {filename:file + '.js'});
 }
 const E = runtime.Economy, check = runtime.LocalSave.validate;
+// Endgame fixtures exercise all registries. Campaign locks have their own fresh-company coverage below.
+function fullSector(){const s=E.newGame();s.campaign.level=4;return s;}
 const clone = state => check(JSON.parse(JSON.stringify(state)));
 {
-  const s=E.newGame(),B=runtime.Bargains,C=runtime.Commerce,G=runtime.Escort,F=runtime.Freeport;
+  const s=fullSector(),B=runtime.Bargains,C=runtime.Commerce,G=runtime.Escort,F=runtime.Freeport;
   const labels=new Set();
   for(const place of ['mira','serein','calyx']){
     for(const event of [null,'risk','boom','breakthrough']){
@@ -67,7 +69,7 @@ const clone = state => check(JSON.parse(JSON.stringify(state)));
   const migrated=clone(s);assert.equal(migrated.cash,s.cash);assert.equal(migrated.leisure.auction.lot.leader,'player');
   migrated.leisure.auction.lot.quotes=[reserve*2,reserve,reserve];F.round(migrated,old.id);
   assert.equal(migrated.cash,s.cash+reserve);assert.equal(clone(migrated).leisure.auction.lot.bid,0);
-  const empty=E.newGame();F.invite(empty);const ready=empty.leisure.auction.lot;
+  const empty=fullSector();F.invite(empty);const ready=empty.leisure.auction.lot;
   F.start(empty,ready.id,runtime.Leisure.get(ready.id).price*2);
   F.round(empty,ready.id);F.round(empty,ready.id);assert.equal(empty.leisure.auction.history[0].winner,'유찰');check(empty);
   console.log('PASS: contextual quotes, actual invoices, graded encounters, escort payroll and allocation, legacy escrow and unsold lots.');
@@ -75,7 +77,7 @@ const clone = state => check(JSON.parse(JSON.stringify(state)));
 {
   const C=runtime.Commerce,H=runtime.Staff;
   const nextDay=s=>{let row;while(!row)row=E.step(s);return row;};
-  const s=E.newGame();
+  const s=fullSector();
   const original=s.markets.slice(0,3);s.markets=original;s.planets=s.planets.slice(0,6);delete s.frontier;delete s.security;delete s.dealSerial;delete s.hr;delete s.exchange;
   check(s);assert.equal(s.markets.length,8);assert.equal(s.planets.length,9);assert.equal(s.markets[0],original[0]);
   const lines=[{good:'tea',qty:8},{good:'gear',qty:4}];
@@ -112,7 +114,7 @@ const clone = state => check(JSON.parse(JSON.stringify(state)));
 }
 {
   const F = runtime.Freight;
-  const old = E.newGame();
+  const old = fullSector();
   delete old.freight;
   old.history.forEach(row => delete row.contract);
   const s = clone(old);
@@ -143,7 +145,7 @@ const clone = state => check(JSON.parse(JSON.stringify(state)));
   assert.equal(F.payment(resumed), 6000); // New contract uses upgraded engines.
   console.log('PASS: freight allocation, old save, voyage resume, warp terms, single payment and quarter close.');
 }
-const game = E.newGame();
+const game = fullSector();
 game.cash = 1_000_000;
 const before = game.cash;
 const researchCost = E.researchCost(game, 'warp');
@@ -329,7 +331,7 @@ console.log('PASS: exhibition grades and routes, expanded relic auction migratio
   let cash=s.cash;
   assert.equal(H.advance(s,'BUY_FIRST_STOCK_SHARE'),false);
   assert.ok(H.advance(s,'OPEN_ORBITAL_MAP_OR_SELECT_PLANET'));
-  assert.equal(s.cash,cash+5000);
+  assert.equal(s.cash,cash+500);
   assert.equal(H.advance(s,'OPEN_ORBITAL_MAP_OR_SELECT_PLANET'),false);
   runtime.Commerce.schedule(s,'nereid','lyra',[{good:'tea',qty:1}]);
   assert.equal(s.story.scene,'tutorial_02');
@@ -342,10 +344,10 @@ console.log('PASS: exhibition grades and routes, expanded relic auction migratio
   cash=resumed.cash;H.claim(resumed,'mission_first_trade');assert.equal(resumed.cash,cash+10000);
   assert.throws(()=>H.claim(clone(resumed),'mission_first_trade'));
   resumed.cash=2*resumed.story.baseline;H.claim(resumed,'mission_net_worth_2x');
-  cash=resumed.cash;E.research(resumed,'cargo',true);assert.equal(resumed.cash,cash);assert.equal(resumed.story.points,0);
+  runtime.Campaign.progress(resumed);cash=resumed.cash;E.research(resumed,'cargo',true);assert.equal(resumed.cash,cash);assert.equal(resumed.story.points,0);
   assert.throws(()=>E.research(resumed,'warp',true));
   H.claim(resumed,'mission_first_research');E.research(resumed,'warp');assert.equal(resumed.logs[0].title,'연구 성과 기록');
-  E.buyLand(resumed,'eir');const cost=E.forecast(resumed).fleetCost;H.claim(resumed,'mission_second_outpost');
+  E.buyLand(resumed,'lyra');const cost=E.forecast(resumed).fleetCost;H.claim(resumed,'mission_second_outpost');
   assert.ok(E.forecast(resumed).fleetCost<cost);
   resumed.cash=1000;H.loan(resumed,false);assert.equal(resumed.cash,21000);assert.throws(()=>H.loan(resumed,false));
   const day=resumed.day;while(resumed.day===day)E.step(resumed);
@@ -371,4 +373,33 @@ console.log('PASS: exhibition grades and routes, expanded relic auction migratio
   assert.equal(visited.size,Object.keys(pages).length);
   company.dockPage='unlisted';assert.throws(()=>clone(company));
   console.log('PASS: both dock questions rejoin the story and every saved line reaches the control room.');
+}
+{
+  const C=runtime.Campaign,H=runtime.Handover,s=E.newGame();
+  const counts=state=>[C.ports(state).length,C.markets(state).length];
+  assert.deepEqual(counts(s),[3,2]);assert.equal(s.cash,197500);
+  H.choose(s,'tutorial_01');
+  for(const step of runtime.HandoverScript.steps){
+    const prior=s.cash;assert.ok(H.advance(s,step.requiredAction));assert.equal(s.cash-prior,500);
+    assert.equal(H.advance(s,step.requiredAction),false);
+  }
+  assert.equal(s.cash,200000);
+  assert.throws(()=>E.buyLand(s,'eir'));assert.throws(()=>E.trade(s,'ARC',1,true));
+  assert.throws(()=>runtime.Commerce.schedule(s,'nereid','mira',[{good:'tea',qty:1}]));
+  assert.throws(()=>runtime.Commerce.trade(s,'lyra','wick',1,true));assert.throws(()=>runtime.Freight.accept(s,'clock'));
+  assert.throws(()=>E.research(s,'warp'));assert.throws(()=>E.merge(s,'TOW',true));
+  E.buyLand(s,'lyra');assert.deepEqual(counts(s),[5,4]);
+  const cashOnly=E.newGame();cashOnly.cash=cashOnly.campaign.base*2;C.progress(cashOnly);assert.equal(C.level(cashOnly),2);
+  s.cash=s.campaign.base*11;E.research(s,'warp');E.research(s,'warp');E.research(s,'cargo');
+  assert.equal(C.level(s),2);E.research(s,'ai');assert.deepEqual(counts(s),[7,6]);
+  const byLand=clone(s);
+  for(const id of ['mira','veyra','orion','serein'])byLand.planets.find(p=>p.id===id).owner='player';
+  C.progress(byLand);assert.equal(C.level(byLand),4);
+  E.trade(s,'TOW',50,true);assert.equal(C.level(s),3);E.trade(s,'TOW',1,true);assert.deepEqual(counts(s),[9,8]);
+  E.trade(s,'TOW',51,false);assert.equal(C.level(s),4);
+  let messages=0;while(C.pending(s)){s.campaign.read++;messages++;assert.equal(C.pending(clone(s))?.line,C.pending(s)?.line);}
+  assert.equal(messages,10);
+  const old=E.newGame();delete old.campaign;old.cash=12345;old.markets.find(r=>r.id==='ARC').shares=1;
+  const migrated=clone(old);assert.equal(C.level(migrated),4);assert.equal(migrated.cash,12345);
+  console.log('PASS: 200,000 CR funding, chapter gates, both milestone paths, persisted dispatches and legacy holdings.');
 }

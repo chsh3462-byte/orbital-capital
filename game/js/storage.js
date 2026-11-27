@@ -55,7 +55,10 @@ window.LocalSave = (() => {
         &&s.markets.every(r=>r.acquired===s.mergers.some(m=>m.id===r.id)&&(!r.acquired||(r.shares===0&&!s.planets.some(p=>p.owner===r.id))))
         &&items(s.history,h=>['day','cash','trade','facility','dividend','fleetCost','landCost','risk','revenue','cost','share','rep'].every(k=>finite(h[k]))&&Number.isSafeInteger(h.net)&&['marketing','research','contract','goodsSales','goodsCost','wages'].every(k=>h[k]===undefined||integer(h[k])),180)&&s.history.length>0
         &&items(s.quarters,q=>['q','revenue','cost'].every(k=>integer(q[k]))&&Number.isSafeInteger(q.net)&&['trade','facility','dividend','fleetCost','landCost','risk','research','marketing','contract','goodsSales','goodsCost','wages','share','rep'].every(k=>q[k]===undefined||finite(q[k])));
-      if(valid)return s;
+      if(valid){
+        Campaign.migrate(s);
+        if(Campaign.valid(s.campaign))return s;
+      }
     }catch{}
     throw Error('저장 형식 또는 게임 데이터가 손상되었습니다.');
   }

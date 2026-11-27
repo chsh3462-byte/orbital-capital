@@ -114,6 +114,7 @@
   }
   function nav(target){
     if(!U.nav[target])return;
+    if(!Campaign.allowed(state,target)){error('챕터 '+Campaign.tier.get(target)+'에서 열립니다.');return;}
     if(dialog.open)dialog.close();modal=null;page=target;
     if(target==='finance')storyAction('OPEN_PNL_OR_LOGS');
     document.querySelectorAll('#nav button').forEach(b=>{b.classList.toggle('on',b.dataset.nav===target);if(b.dataset.nav===target)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
@@ -121,6 +122,11 @@
     $('#dashboard').hidden=page!=='dashboard';workspace.hidden=page==='dashboard';render();window.scrollTo(0,0);
   }
   function render(){
+    if(Campaign.progress(state))auto();
+    if(!Campaign.allowed(state,exchangePort))exchangePort='nereid';
+    const level=Campaign.level(state);
+    $('#chapter-status').textContent='CH.'+level+' · '+Campaign.chapters[level-1].title;
+    $('#map-count').textContent=Campaign.ports(state).length+' / 9개 행성';
     const focus=document.activeElement?.closest('button'),selector=focus?.dataset.act?['act',focus.dataset.act,focus.dataset.id]:null;
     $('#date').textContent=U.date(state.day);$('#metrics').innerHTML=U.metrics(state);
     const badge=$('.corp-logo'),jewel=Leisure.get(state.leisure.worn);
@@ -145,11 +151,28 @@
       alt?.focus({preventScroll:true});
     }
     drawGuide();animationBatch=0;
+    for(const b of document.querySelectorAll('[data-nav]')){
+      b.disabled=!Campaign.allowed(state,b.dataset.nav);
+      if(b.disabled)b.title='챕터 '+Campaign.tier.get(b.dataset.nav)+'에서 개방';
+      else if(b.closest('#nav'))b.title=U.nav[b.dataset.nav][0];
+    }
   }
   async function open(kind,id){
+    if(['planet','stock','reviewFriendly','reviewHostile'].includes(kind)&&!Campaign.allowed(state,id)){error('아직 시장에 편입되지 않았습니다.');return;}
+    if(['reviewFriendly','reviewHostile'].includes(kind)&&!Campaign.allowed(state,'mergers')){error('챕터 3에서 인수 협상이 열립니다.');return;}
     modal={kind,id};const token=modal;
     let title='',body='';
-    if(kind==='storyBook'){
+    if(kind==='chapters'){
+      title='섹터 07 · 운항 허가 기록';
+      const sites=state.planets.filter(p=>p.owner==='player').length;
+      const research=Object.values(state.tech).filter(Boolean).length;
+      const share=Math.max(...state.markets.map(r=>r.acquired?100:r.shares));
+      const base=state.campaign.base;
+      const progress=['',U.kv('순자산 / 목표',U.money(Handover.worth(state))+' / '+U.money(base*2))+U.kv('거점',sites+' / 2곳'),
+        U.kv('순자산 / 목표',U.money(Handover.worth(state))+' / '+U.money(base*10))+U.kv('연구 분야',research+' / 3종'),
+        U.kv('최대 지분',share+' / 51%')+U.kv('거점',sites+' / 6곳')];
+      body=Campaign.chapters.map((c,i)=>'<section class="handover"><small>CH.'+(i+1)+' · '+(i<Campaign.level(state)?'허가 완료':'허가 대기')+'</small><h3>'+c.title+'</h3><p>'+c.condition+'</p>'+(i<Campaign.level(state)?c.briefs.map(t=>'<p>'+t+'</p>').join(''):i===Campaign.level(state)?progress[i]:'')+'</section>').join('');
+    }else if(kind==='storyBook'){
       title='대표 인계 수첩';
       body=state.story?Handover.handbook(state):'<p>현재 회사의 함대와 거점을 이어받아 AURA 인계를 시작합니다.</p>'+U.btn('현재 회사로 취임 인계 시작','storyEnroll');
       if(id==='firstShift'){
@@ -232,6 +255,10 @@
     try{
       if(a)aura.clearIssue();
       switch(a){
+        case 'chapterBoard':await open('chapters');return;
+        case 'chapterRead':
+          if(Campaign.pending(state)){state.campaign.read++;refreshAura();auto();}
+          return;
         case 'auraExchange':nav('exchange');return;
         case 'dockOpen':beginDock();return;
         case 'dockNext':
@@ -293,6 +320,7 @@
           return;
         case 'guideStart':{
           if(Handover.current(state)){nav('dashboard');if(!Handover.current(state).step)beginDock();return;}
+          if(!Campaign.allowed(state,'mergers')){await open('chapters');return;}
           const g=state.guide;
           if(g.status==='done'){g.step=0;g.seen=false;}
           g.status='active';visitChapter();return;
@@ -307,7 +335,7 @@
           }
           g.step=Math.max(0,g.step+(a==='guideNext'?1:-1));g.seen=false;visitChapter();return;
         }
-        case 'exchangePort':case 'openMarket':if(Commerce.port(id)){exchangePort=id;nav('exchange');}return;
+        case 'exchangePort':case 'openMarket':if(Commerce.port(id)&&Campaign.allowed(state,id)){exchangePort=id;nav('exchange');}return;
         case 'goodsOrder':case 'routeSetup':case 'hrSetup':case 'guardSetup':await open(a,id);return;
         case 'goodsBuy':case 'goodsSell':{
           const qty=$('#goodsQty').valueAsNumber,buy=a==='goodsBuy';
@@ -412,7 +440,7 @@
     const dt=Math.min(.25,Math.max(0,(now-last)/1000));last=now;
     const sim=paused||dock.open||Handover.current(state)?.choices||modal||$('#account-dialog').open||document.hidden?0:dt*speed;
     playTime+=sim;clock+=sim;
-    if(clock>=3){clock-=3;const priorScene=state.story?.scene;const row=E.step(state);if(priorScene==='tutorial_02'&&state.story.scene==='tutorial_03')notify('첫 항로 개설 보너스 +3,000 CR 지급');if(row){map.payout(row.net+row.research+row.marketing);auto();}render();}
+    if(clock>=3){clock-=3;const priorScene=state.story?.scene;const row=E.step(state);if(priorScene==='tutorial_02'&&state.story.scene==='tutorial_03')notify('첫 항로 개설 보너스 +500 CR 지급');if(row){map.payout(row.net+row.research+row.marketing);auto();}render();}
     if(now-lastPaint>=32&&!document.hidden){
       if(page==='dashboard')map.draw(state,playTime,sim?Math.min(.25,(now-lastPaint)/1000)*speed:0);
       if(spinEnd&&now>=spinEnd){spinEnd=0;if(modal?.kind==='casino'&&dialog.open)open('casino');}

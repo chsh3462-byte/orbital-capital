@@ -3,6 +3,9 @@ window.Records=(()=>{
   // Dates are the local release dates in Korea. Commit references identify milestones
   // within a release, including deployment work that did not change its version.
   const history=[
+    {version:'0.8.0',date:'2026-11-27',title:'섹터 07 운항 허가',
+      updates:['부두 관리자와 첫 운송을 접수하고 신규 취임 자금 200,000 CR를 인계받습니다. 처음 197,500 CR, 다섯 실습에 500 CR씩 지급합니다.'],
+      development:[['챕터 진행과 AURA 통신','순자산·거점·연구·지분에 따라 시장을 확장하고, 새로 열린 기능을 AURA가 하나씩 설명합니다.']] },
     {version:'0.7.2',date:'2026-11-26',title:'AURA 동행 안내',
       updates:['AURA가 관제실과 주문창에 남아 첫 운송부터 주식 매수까지 안내합니다.'],
       development:[['상황별 표정','선적 대기, 수량 오류, 실습 완료에 맞춰 표정과 대사를 연결했습니다. 안내를 접어도 AURA는 옆에 남습니다.']]},

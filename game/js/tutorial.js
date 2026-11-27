@@ -28,8 +28,8 @@ window.Tutorial = (() => {
   ];
   const initial=()=>({status:'offer',step:0,seen:false});
   const valid=g=>g&&['offer','active','later','done'].includes(g.status)&&Number.isInteger(g.step)&&g.step>=0&&g.step<chapters.length&&typeof g.seen==='boolean';
-  const issuer=s=>s.markets.find(r=>!r.acquired)||null;
-  const site=s=>s.planets.find(p=>p.id==='eir'&&!p.owner)||s.planets.find(p=>!p.owner)||s.planets.find(p=>p.id==='eir');
+  const issuer=s=>Campaign.markets(s).find(r=>!r.acquired)||null;
+  const site=s=>s.planets.find(p=>Campaign.allowed(s,p.id)&&!p.owner)||s.planets.find(p=>p.id==='nereid');
   function chapter(s){
     const ch={...chapters[s.guide.step]};
     if(s.guide.step===4&&site(s).owner)ch.story='후보지로 검토하던 시절의 도면과 현재 장부를 함께 펼쳐 보죠. 지금은 주인이 있는 땅입니다. 소유권과 준공 시설을 확인하면 그동안의 개발 결과를 읽을 수 있어요.';

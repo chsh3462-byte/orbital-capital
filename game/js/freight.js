@@ -1,9 +1,9 @@
 'use strict';
 window.Freight = (() => {
   const jobs = [
-    {id:'tea', cargo:'청무차 첫물', client:'네레이드 차 농원', to:'라이라', days:2, fee:6000, art:'luxTea', note:'라이라 찻집의 개장에 맞춰 첫 수확분을 실어 주세요.'},
-    {id:'clock', cargo:'선실시계 부품', client:'탈로스 시계 골목', to:'베이라', days:3, fee:10400, art:'luxClock', note:'도크가 다시 열리는 날, 수리한 시계추를 객선마다 달기로 했습니다.'},
-    {id:'scent', cargo:'빙화 향료 원액', client:'에이르 조향소', to:'오리온', days:5, fee:19700, art:'luxScent', note:'봉인한 원액을 오리온 향료상의 겨울 시향회로 보내 주세요.'}
+    {id:'tea', port:'nereid', cargo:'청무차 첫물', client:'네레이드 차 농원', to:'라이라', days:2, fee:6000, art:'luxTea', note:'라이라 찻집의 개장에 맞춰 첫 수확분을 실어 주세요.'},
+    {id:'clock', port:'thalos', cargo:'선실시계 부품', client:'탈로스 시계 골목', to:'베이라', days:3, fee:10400, art:'luxClock', note:'도크가 다시 열리는 날, 수리한 시계추를 객선마다 달기로 했습니다.'},
+    {id:'scent', port:'eir', cargo:'빙화 향료 원액', client:'에이르 조향소', to:'오리온', days:5, fee:19700, art:'luxScent', note:'봉인한 원액을 오리온 향료상의 겨울 시향회로 보내 주세요.'}
   ];
   const find = id => jobs.find(job => job.id === id);
   const duration = (job, warp) => Math.max(1, job.days - warp);
@@ -20,6 +20,7 @@ window.Freight = (() => {
   function accept(s, id) {
     const job = find(id);
     if (!job || s.freight || Commerce.freeShips(s)<1) throw Error('현재 수주할 수 없는 계약입니다.');
+    Campaign.requireAccess(s,job.port);
     s.freight = {id, start:s.day, warp:s.tech.warp};
     Economy.note(s,'fleet','운송 계약 수주 · '+job.cargo,job.client+' → '+job.to+' · D'+due(s.freight)+' 마감');
   }
@@ -41,7 +42,7 @@ window.Freight = (() => {
       status += U.kv('운송 중',job.cargo+' → '+job.to) +
         U.kv('도착 및 입금',U.date(due(order))+' 결산 · '+U.money(job.fee));
     }
-    const cards = jobs.map(job => {
+    const cards = jobs.filter(job=>Campaign.allowed(s,job.port)).map(job => {
       const active = order && order.id === job.id;
       const days = duration(job,active ? order.warp : s.tech.warp);
       return '<article class="tile"><div class="tile-art">'+PixelArt.thumb(job.art,48)+'</div><h3>'+job.cargo+'</h3><p class="desc">'+job.note+'</p>'+

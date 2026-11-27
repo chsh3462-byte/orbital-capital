@@ -8,8 +8,8 @@ window.ExchangeUI = (() => {
   const portName=id=>C.port(id).name;
   function market(s,place){
     const U=UI, p=C.port(place), e=s.exchange;
-    const buttons=GameData.planets.map(d=>'<button class="tab '+(d===p?'active':'')+'" data-act="exchangePort" data-id="'+d.id+'" aria-pressed="'+(d===p)+'">'+d.name+'</button>').join('');
-    const prices=C.goods.map(g=>{
+    const buttons=Campaign.ports(s).map(d=>'<button class="tab '+(d===p?'active':'')+'" data-act="exchangePort" data-id="'+d.id+'" aria-pressed="'+(d===p)+'">'+d.name+'</button>').join('');
+    const prices=Campaign.goods(s).map(g=>{
       const q=C.quote(s,place,g.id), h=C.holding(s,place,g.id);
       const change=q.bid-C.quote(s,place,g.id,s.day-1).bid;
       const role=g.origin===place?'현지 특산품':g.hub===place?'주요 소비지':'일반 유통';
@@ -32,7 +32,7 @@ window.ExchangeUI = (() => {
   }
   function order(s,place,id){
     const U=UI,g=C.byId(id),h=C.holding(s,place,id);
-    const rows=GameData.planets.map(p=>{
+    const rows=Campaign.ports(s).map(p=>{
       const q=C.quote(s,p.id,id);
       const bids=Array.from({length:Math.min(7,s.day)},(_,i)=>C.quote(s,p.id,id,s.day-Math.min(7,s.day)+1+i).bid);
       return [p.name,p.id===g.origin?'특산지':p.id===g.hub?'주요 소비지':'일반',q.demand,U.money(q.ask),U.money(q.bid),U.spark(bids,'#83cbbb')];
@@ -43,16 +43,16 @@ window.ExchangeUI = (() => {
       '<p id="goodsQuote" class="hint"></p><div class="action-row">'+U.btn('매수 조건 보기','goodsBuy',id)+U.btn('매도 조건 보기','goodsSell',id,!h,false)+U.btn('이 품목 자동 운항','routeSetup',id,C.freeShips(s)<1,false)+'</div>';
   }
   function routeForm(s,place,id){
-    const planets=GameData.planets.map(p=>[p.id,p.name]),g=C.byId(id)||C.goods.find(g=>g.origin===place);
+    const planets=Campaign.ports(s).map(p=>[p.id,p.name]),g=C.byId(id)||C.goods.find(g=>g.origin===place);
     return '<p class="hint">정기편 한 척을 이 항로에 배정합니다. 취소 시 이미 선적한 화물은 도착지에서 한 번 매각한 뒤 복귀합니다.</p>'+
       select('routeGrade','배선할 운송정 등급',Escort.hulls.map((name,i)=>[i+1,(i+1)+'급 '+name]),1)+
       select('routeGuard','동승 경호',guardOptions(s),0)+
-      select('routeFrom','매입 · 선적 항구',planets,place)+select('routeTo','매각 항구',planets,g.hub===place?g.origin:g.hub)+
-      '<fieldset class="cargo-lines"><legend>회당 선적 목록 · 0상자는 제외</legend>'+C.goods.map(item=>num('cargo-'+item.id,item.name+' (상자)',item===g?Math.min(10,C.capacity(s)):0,0,C.capacity(s,4))).join('')+'</fieldset>'+
+      select('routeFrom','매입 · 선적 항구',planets,place)+select('routeTo','매각 항구',planets,[g.hub,g.origin,...planets.map(([key])=>key)].find(key=>key!==place&&Campaign.allowed(s,key)))+
+      '<fieldset class="cargo-lines"><legend>회당 선적 목록 · 0상자는 제외</legend>'+Campaign.goods(s).map(item=>num('cargo-'+item.id,item.name+' (상자)',item===g?Math.min(10,C.capacity(s)):0,0,C.capacity(s,4))).join('')+'</fieldset>'+
       '<p id="routeQuote" class="hint"></p><div class="action-row">'+UI.btn('반복 운항 시작','routeStart')+'</div>';
   }
   function readLines(doc){
-    return C.goods.map(g=>({good:g.id,qty:doc.getElementById('cargo-'+g.id).valueAsNumber})).filter(l=>l.qty!==0);
+    return C.goods.map(g=>({good:g.id,qty:doc.getElementById('cargo-'+g.id)?.valueAsNumber??0})).filter(l=>l.qty!==0);
   }
   function updateQuote(s,place,id,doc){
     const read=id=>doc.getElementById(id);

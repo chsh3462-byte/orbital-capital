@@ -49,7 +49,7 @@ window.UI=(()=>{
   }
   function change(r){return (r.price-r.prev)/r.prev*100;}
   function tickers(s){
-    return s.markets.map(r=>{
+    return Campaign.markets(s).map(r=>{
       const d=D.rivals.find(d=>d.id===r.id),v=change(r),color=v<0?'#ef9c96':'#71d9b8';
       return '<button class="ticker" data-act="stock" data-id="'+r.id+'"><span class="emblem" style="--c:'+d.color+'">'+icon(d.icon)+'</span><div><b class="ticker-id">'+r.id+'</b><small>'+d.name+'</small></div>'+spark(r.history.slice(-20),color)+'<div class="ticker-price">'+fmt(r.price)+'<small class="'+(v<0?'neg':'pos')+'">'+(r.acquired?'상장 폐지':(v<0?'−':'+')+Math.abs(v).toFixed(2)+'%')+'</small></div></button>';
     }).join('');
@@ -81,15 +81,15 @@ window.UI=(()=>{
     const a=s.ads.find(x=>x.id===c.id);
     return '<article class="tile"><div class="tile-art">'+thumb(c.id==='holo'?'hologram':c.icon,48)+'</div><h3>'+c.name+'</h3>'+kv('운영 기간',c.days+'일')+kv('운송 · 시설 매출','+'+Math.round(c.boost*100)+'%')+kv('브랜드 평판','+'+c.rep)+btn(a?'진행 중 · '+a.left+'일 남음':money(c.cost)+' · 집행','ad',c.id,!!a||s.cash<c.cost)+'</article>';
   }).join('')+'</div>';}
-  function estate(s){return '<div class="cards">'+s.planets.map(p=>{
+  function estate(s){return '<div class="cards">'+s.planets.filter(p=>Campaign.allowed(s,p.id)).map(p=>{
     const d=D.planets.find(d=>d.id===p.id);
     return '<article class="tile"><div class="tile-art">'+thumb(d.sprite,84)+'</div><div class="toolbar" style="margin:0"><h3>'+d.name+'</h3>'+tag(ownerName(p),p.owner!=='player')+'</div>'+kv('건설 시설',p.buildings.length+' / 4')+btn(p.owner==='player'?'시설 관리':p.owner?'소유 기업 보기':money(d.price)+' · 매입 검토','planet',p.id)+'</article>';
   }).join('')+'</div>';}
   function stocks(s){
     const worth=s.markets.reduce((a,r)=>a+r.shares*r.price,0),basis=s.markets.reduce((a,r)=>a+r.basis,0);
-    return '<p class="screen-intro">평가액 '+money(worth)+'　·　평가손익 '+money(worth-basis)+'　·　실현손익 '+money(s.realized)+'</p><div class="cards">'+s.markets.map(r=>{
+    return '<p class="screen-intro">평가액 '+money(worth)+'　·　평가손익 '+money(worth-basis)+'　·　실현손익 '+money(s.realized)+'</p><div class="cards">'+Campaign.markets(s).map(r=>{
       const d=D.rivals.find(x=>x.id===r.id);
-      return '<article class="tile"><div class="title-line"><span class="emblem" style="--c:'+d.color+'">'+icon(d.icon)+'</span><div><h3>'+d.name+'</h3><small class="eyebrow">'+r.id+' · '+d.en.toUpperCase()+'</small></div></div><div class="number">'+fmt(r.price)+'<small>CR / 주</small></div><div class="chart-box">'+spark(r.history,d.color)+'</div>'+kv('시장 점유율',E.weights(s)[r.id].toFixed(1)+'%')+(d.specialty?kv('기업 전문 자산',d.specialty):'')+kv('소유 행성',s.planets.filter(p=>p.owner===r.id).map(p=>D.planets.find(x=>x.id===p.id).name).join(', ')||'—')+kv('보유 지분',r.shares+'%')+btn(r.acquired?'합병 완료':'주식 거래 · 인수','stock',r.id,r.acquired)+'</article>';
+      return '<article class="tile"><div class="title-line"><span class="emblem" style="--c:'+d.color+'">'+icon(d.icon)+'</span><div><h3>'+d.name+'</h3><small class="eyebrow">'+r.id+' · '+d.en.toUpperCase()+'</small></div></div><div class="number">'+fmt(r.price)+'<small>CR / 주</small></div><div class="chart-box">'+spark(r.history,d.color)+'</div>'+kv('시장 점유율',E.weights(s)[r.id].toFixed(1)+'%')+(d.specialty?kv('기업 전문 자산',d.specialty):'')+kv('소유 행성',s.planets.filter(p=>p.owner===r.id&&Campaign.allowed(s,p.id)).map(p=>D.planets.find(x=>x.id===p.id).name).join(', ')||'—')+kv('보유 지분',r.shares+'%')+btn(r.acquired?'합병 완료':(Campaign.allowed(s,'mergers')?'주식 거래 · 인수':'주식 거래'),'stock',r.id,r.acquired)+'</article>';
     }).join('')+'</div>'+panel('합병 이력',s.mergers.length?table(['기업','합병일','방식','잔여 지분 비용'],s.mergers.map(m=>[m.id,date(m.day),m.hostile?'적대적':'우호적',money(m.cost)])):'<p class="padded hint">완료된 합병이 없습니다.</p>');
   }
   function planetDetail(s,id){
@@ -97,14 +97,14 @@ window.UI=(()=>{
     const p=s.planets.find(p=>p.id===id),d=D.planets.find(p=>p.id===id);
     let acts='';
     if(!p.owner)acts='<div class="action-row">'+btn(money(d.price)+' · 토지 매입','buyLand',id,s.cash<d.price)+'</div>';
-    else if(p.owner!=='player')acts='<p class="hint">이 행성의 소유권은 '+p.owner+' 인수 시 이전됩니다.</p><div class="action-row">'+btn('소유 기업 보기','stock',p.owner)+'</div>';
+    else if(p.owner!=='player')acts='<p class="hint">이 행성의 소유권은 '+p.owner+' 인수 시 이전됩니다.</p><div class="action-row">'+btn(Campaign.allowed(s,p.owner)?'소유 기업 보기':'미상장 기업','stock',p.owner,!Campaign.allowed(s,p.owner))+'</div>';
     else acts=D.facilities.map(f=>'<button class="list-choice" data-act="build" data-id="'+p.id+'/'+f.id+'" '+(p.buildings.includes(f.id)||s.cash<f.cost?'disabled':'')+'><span class="item-line">'+thumb(f.id,32)+'<span>'+f.name+'<small>매출 '+money(f.income)+' / 일</small></span></span><b>'+(p.buildings.includes(f.id)?'준공':money(f.cost))+'</b></button>').join('');
     return '<div class="asset-summary">'+thumb(d.sprite,84)+'<div><h3>'+d.name+'</h3><p class="hint">'+d.code+' · '+ownerName(p)+'</p></div></div>'+kv('특산품',Commerce.goods.find(g=>g.origin===id).name)+kv('주요 수요 품목',Commerce.goods.find(g=>g.hub===id).name)+'<div class="action-row">'+btn('현지 거래장 열기','openMarket',id,false,false)+'</div>'+kv('보유 시설',p.buildings.map(id=>D.facilities.find(f=>f.id===id).name).join(', ')||'없음')+acts;
   }
   function stockDetail(s,id){
     const r=s.markets.find(r=>r.id===id),d=D.rivals.find(d=>d.id===id);
     if(r.acquired)return '<p class="hint">'+d.name+'의 합병이 완료되었습니다.</p>';
-    return '<div class="chart-box">'+spark(r.history,d.color)+'</div>'+kv('현재 주가',money(r.price))+kv('보유 지분',r.shares+'% · '+r.shares+' / 100주')+kv('일일 예상 배당',money(Math.floor(r.shares*r.price*.002)))+'<label class="field">거래 수량 <input id="qty" type="number" min="1" max="100" step="1" value="1"> 주</label>'+kv('주문 금액','<span id="order-cost">'+money(r.price)+'</span>')+'<div class="action-row">'+btn('매수','buy',id)+btn('매도','sell',id,!r.shares,false)+'</div><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><h3>기업 인수합병</h3><p class="hint">우호적 인수는 지분 50% 이상에서 가능합니다. 적대적 인수는 잔여 주식에 프리미엄 30%를 지불합니다.</p><div class="action-row">'+btn('우호적 인수 검토','reviewFriendly',id,r.shares<50,false)+btn('적대적 인수 검토','reviewHostile',id,false,false)+'</div>';
+    return '<div class="chart-box">'+spark(r.history,d.color)+'</div>'+kv('현재 주가',money(r.price))+kv('보유 지분',r.shares+'% · '+r.shares+' / 100주')+kv('일일 예상 배당',money(Math.floor(r.shares*r.price*.002)))+'<label class="field">거래 수량 <input id="qty" type="number" min="1" max="100" step="1" value="1"> 주</label>'+kv('주문 금액','<span id="order-cost">'+money(r.price)+'</span>')+'<div class="action-row">'+btn('매수','buy',id)+btn('매도','sell',id,!r.shares,false)+'</div>'+(!Campaign.allowed(s,'mergers')?'<p class="hint">인수 협상은 챕터 3에서 열립니다.</p>':'<hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><h3>기업 인수합병</h3><p class="hint">우호적 인수는 지분 50% 이상에서 가능합니다. 적대적 인수는 잔여 주식에 프리미엄 30%를 지불합니다.</p><div class="action-row">'+btn('우호적 인수 검토','reviewFriendly',id,r.shares<50,false)+btn('적대적 인수 검토','reviewHostile',id,false,false)+'</div>');
   }
   return {nav,spark,table,panel,exchange:ExchangeUI.market,personnel:ExchangeUI.personnel,icon,fmt,money,esc,date,kv,btn,metrics,tickers,fleet,logs,bars,freight:Freight.board,finance,research,ads,estate,stocks,port:Freeport.port,lounge:Freeport.lounge,planetDetail,stockDetail};
 })();

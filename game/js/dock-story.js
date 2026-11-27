@@ -2,27 +2,28 @@
 window.DockStory = (() => {
   const cast = {
     harbor: ['네레이드 항만 방송', '접안 주파수'],
-    clerk: ['문해진', '야간 접수원'],
+    clerk: ['문해진', '부두 야간 관리자'],
     pilot: ['이안', '화물선 선장'],
     aura: ['아우라 · AURA', '오르빗 캐피탈 전속 비서']
   };
   // Optional questions return to the same handover. The chosen reply is saved like any other line.
   const pages = {
     arrival: {actor:'harbor', place:'네레이드 접근 궤도', item:'야간 입항표', field:'도착지', value:'네레이드 · 3번 부두', line:'은하 외곽, 아스트라 성계 섹터 07에 진입했습니다. 네레이드에 내리실 분은 짐을 챙겨 주세요. 라이라행 정기선은 오늘도 결항입니다.', next:[['3번 부두에 내린다','counter']]},
-    counter: {actor:'clerk', place:'3번 부두 · 화물 접수창구', item:'미수령 봉투', field:'수취인', value:'오르빗 캐피탈 후임 대표', line:'오르빗에서 왔죠? 장부에 이름은 바뀌었는데 창구 열쇠를 아무도 안 찾아가서. 전임자가 봉투에 딱 두 가지 넣어 뒀어요. 열쇠하고, 반송된 운송장.', next:[['운송장을 펼친다','waybill'],['정기선은 왜 안 오죠?','withdrawal']]},
-    withdrawal: {actor:'clerk', place:'3번 부두 · 화물 접수창구', item:'노선 변경 통지', field:'변방 정기편', value:'운항 철수', line:'큰 회사들은 관문 안쪽으로 갔어요. 빈 배로 돌아오는 날이 많다면서. 그 뒤로 여기선 배 시간 물어보는 사람한테 먼저 짐이 몇 상자인지 물어요.', next:[['반송된 운송장을 본다','waybill']]},
-    waybill: {actor:'clerk', place:'3번 부두 · 화물 접수창구', item:'반송 운송장', field:'발송 / 수령', value:'네레이드 → 라이라', line:'변방 세 항구를 손가락으로 짚어 봐요. 여기 네레이드에서 찻잎을 내고, 라이라는 여객선 식당에 그걸 팔아요. 건너편 베이라에서 오는 실로는 우리 돛감을 짜고요. 지도에선 짧은 선 셋인데, 하나 끊기면 다들 알아요.', next:[['상자를 들고 온 사람을 부른다','crate']]},
-    crate: {actor:'pilot', place:'접수창구 · 계량대 앞', item:'화주 보관표', field:'화물', value:'해무 찻잎 · 건조 보관', line:'이안입니다. 아침마다 라이라 식당에서 몇 상자 실었냐고 무전이 와요. 어제까진 대답을 못 했는데. 오늘은 대표님 이름으로 운송장을 써도 될까요?', next:[['내 이름으로 접수 도장을 찍는다','stamp'],['돌아오는 배에는 뭘 싣죠?','returnCargo']]},
-    returnCargo: {actor:'pilot', place:'접수창구 · 계량대 앞', item:'선장의 수첩', field:'라이라 특산품', value:'별고리 광학유리', line:'라이라에선 광학유리가 나요. 근데 여기서 사 줄 사람이 없으면 돌아올 때 짐만 무거워져요. 받는 쪽 시세부터 보는 게 제 버릇입니다.', next:[['운송장에 접수 도장을 찍는다','stamp']]},
-    stamp: {actor:'clerk', place:'3번 부두 · 화물 접수창구', item:'접수된 운송장', field:'수탁 회사', value:'오르빗 캐피탈', line:'됐어요. 이제 창구는 당신 거예요. 아, 오른쪽에 저 낡은 영사기 전원 좀 눌러 봐요. 전임자가 떠난 뒤로도 매일 아침 혼자 출근하던 친구라.', next:[['창구 영사기의 전원을 켠다','awake']]},
-    awake: {actor:'aura', place:'항만 창구 · 비서 단말기', item:'단말기 인계 기록', field:'접속자', value:'AURA · 대표 비서', line:'…제 목소리 들리세요? 아우라입니다. 선장님은 늘 출항부터 누르셔서, 저는 시세표를 먼저 띄우는 버릇이 생겼어요. 대표님과는 순서를 맞춰 보고 싶네요.', next:[['첫 운송을 같이 준비하자','chart']]},
+    counter: {actor:'clerk', place:'3번 부두 · 야간 창구', item:'인계 봉투', field:'수취인', value:'오르빗 캐피탈 후임 대표', line:'잠깐만요, 그 상자는 저울에 그대로 두세요. …아, 짐 맡기러 온 분이 아니구나. 오르빗에서 오셨죠? 문해진이에요. 야간엔 제가 부두를 맡아요. 오는 길에 라이라행 방송 들으셨어요?', next:[['네. 오늘도 결항이라던데요.','withdrawal'],['네. 이 짐도 라이라로 가나요?','waybill']]},
+    withdrawal: {actor:'clerk', place:'3번 부두 · 야간 창구', item:'노선 변경 통지', field:'변방 정기편', value:'운항 철수', line:'벌써 사흘째예요. 큰 회사가 배를 관문 안쪽으로 돌렸거든요. 그런데 방송은 아직도 ‘오늘’이라고 하네요. 저기 상자 좀 보실래요? 첫날 아침에 들어온 짐이에요.', next:[['라이라에서 기다리는 사람이 있어요?','waybill']]},
+    waybill: {actor:'clerk', place:'3번 부두 · 계량대', item:'반송 운송장', field:'발송 / 수령', value:'네레이드 → 라이라', line:'라이라 선원 식당에서 주문한 찻잎이에요. 어젯밤엔 주인장이 직접 전화해서, 늦어도 좋으니 보낼 수 있는지만 알려 달래요. 아, 마침 선장이 왔네요. 이안 씨, 새 대표님 오셨어요.', next:[['이안 씨, 이 짐 실을 자리 있어요?','crate']]},
+    crate: {actor:'pilot', place:'접수창구 · 계량대 앞', item:'화주 보관표', field:'화물', value:'해무 찻잎 · 건조 보관', line:'자리는 있어요. 문제는 돌아올 때죠. 빈 배로 두 번 다녀오면 기름값부터 모자라거든요. 일단 몇 상자만 실어 볼까요? 식당에 도착할 때까진 제가 안 젖게 맡을게요.', next:[['좋아요. 첫 운송은 우리 이름으로 받죠.','stamp'],['돌아오는 길엔 뭘 실을 수 있죠?','returnCargo']]},
+    returnCargo: {actor:'pilot', place:'접수창구 · 계량대 앞', item:'선장의 수첩', field:'라이라 특산품', value:'별고리 광학유리', line:'라이라 공방에 광학유리가 있어요. 근데 그걸 네레이드에서 얼마에 사 줄지는 저도 몰라요. 우리 비서한테 물어보죠. 저보다 숫자에 밝은 친구예요.', next:[['그럼 가는 짐부터 접수할게요.','stamp']]},
+    stamp: {actor:'clerk', place:'3번 부두 · 서명대', item:'접수된 운송장', field:'수탁 회사', value:'오르빗 캐피탈', line:'여기 한 부는 이안 씨, 한 부는 대표님 거예요. 도장이 얼마 만에 제대로 찍혔는지 모르겠네. 제가 식당에 전화할게요. 대표님은 창구 열쇠 받아 가세요. 비서 단말기도 저 안에 있어요.', next:[['감사해요. 장부는 누가 인계해 주나요?','funding']]},
+    funding: {actor:'clerk', place:'3번 부두 · 서명대', item:'창업 자금 인계서', field:'총 배정액', value:'200,000 CR', line:'장부는 아우라가 맡아요. 새 회사에는 197,500 CR가 먼저 들어가요. 남은 2,500은 인계 확인 다섯 번에 나눠서요. 한 번에 500씩. 찻잎 판 돈은 물론 따로고요. 자, 단말기 켜 볼래요?', next:[['열쇠를 돌려 단말기를 켠다.','awake']]},
+    awake: {actor:'aura', place:'항만 창구 · 비서 단말기', item:'단말기 인계 기록', field:'접속자', value:'AURA · 대표 비서', line:'…대표님? 들리세요? 아우라예요. 방금 해진 씨가 라이라 식당하고 통화하는 소리를 들었어요. 이안 씨 배에 자리가 났다면서요? 그럼 제가 찻잎 시세부터 띄울게요.', next:[['부탁해요, 아우라. 첫 배는 같이 보내죠.','chart']]},
     chart: {actor:'aura', place:'항만 창구 · 항로 지도', item:'첫 운송 메모', field:'시세 확인', value:'네레이드 매입가 / 라이라 매각가', line:'이안 씨가 기다리는 동안 네레이드를 눌러 찻잎 값을 봐요. 그다음 제가 라이라행 운송장을 열어 드릴게요. 얼마를 벌었는지는 배가 돌아오면 둘이 장부에서 확인해요.', next:[['관제실로 간다','done']]}
   };
   function valid(page){return page===undefined||page==='done'||Object.hasOwn(pages,page);}
   function render(id){
     const p=pages[id], [speaker,role]=cast[p.actor];
     const choices=p.next.map(([label,to],i)=>UI.btn(label,'dockNext',to,false,i===0)).join('');
-    const stamp=['stamp','awake','chart'].includes(id)?'<i class="dock-ink">접수</i>':'';
+    const stamp=['stamp','funding','awake','chart'].includes(id)?'<i class="dock-ink">접수</i>':'';
     return '<div class="dock-top"><span>ORBITAL CAPITAL</span><button class="dock-skip" data-act="dockSkip">장면 건너뛰기 ›</button></div>'+
       '<div class="dock-stage"><div class="dock-art art-'+p.actor+'" role="img" aria-label="'+p.place+' · '+speaker+'"></div>'+
       '<aside class="dock-file"><small>SECTOR 07 / DOCK 03</small><h2 id="dock-title">변방의 생존자</h2><p>'+p.place+'</p><div class="dock-ticket"><small>'+p.field+'</small><strong>'+p.value+'</strong><span>'+p.item+'</span>'+stamp+'</div></aside></div>'+

@@ -9,6 +9,7 @@ window.Escort=(()=>{
   const payroll=s=>s.security.roster.reduce((sum,n,i)=>sum+n*wages[i],0);
   const spare=(s,g)=>s.security.roster[g]-s.exchange.routes.filter(r=>r.guard===g).length;
   function hire(s,g){
+    Campaign.requireAccess(s,'personnel');
     if(!Number.isInteger(g)||g<1||g>3||s.security.roster[g]>=12)throw Error('이 등급의 경호 인력 정원이 찼습니다.');
     s.security.roster[g]++;
     Economy.note(s,'fleet',guards[g]+' 고용','일급 '+wages[g]+' CR');

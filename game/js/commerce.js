@@ -14,6 +14,7 @@ window.Commerce = (() => {
   ];
   goods.push(
     {id:'coil',name:'태양 포집 코일',origin:'sable',hub:'opal',base:980,art:'chip',use:'오팔 집광탑의 전력 회수 장치'},
+    {id:'foil',name:'차폐 금박',origin:'lumen',hub:'nix',base:830,art:'ex-foil-egret',use:'닉스의 저온 관측기 차폐재'},
   const byId = id => goods.find(g => g.id === id);
   const port = id => GameData.planets.find(p => p.id === id);
   const integer = (n, lo=0, hi=Number.MAX_SAFE_INTEGER) => Number.isSafeInteger(n) && n>=lo && n<=hi;

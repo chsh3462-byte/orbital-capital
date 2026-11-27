@@ -13,6 +13,7 @@ window.Commerce = (() => {
     {id:'resin',name:'수목 수지',origin:'calyx',hub:'mira',base:560,art:'luxSeed',use:'미라 공방의 유리 틀을 밀봉하는 수지'}
   ];
   goods.push(
+    {id:'coil',name:'태양 포집 코일',origin:'sable',hub:'opal',base:980,art:'chip',use:'오팔 집광탑의 전력 회수 장치'},
   const byId = id => goods.find(g => g.id === id);
   const port = id => GameData.planets.find(p => p.id === id);
   const integer = (n, lo=0, hi=Number.MAX_SAFE_INTEGER) => Number.isSafeInteger(n) && n>=lo && n<=hi;

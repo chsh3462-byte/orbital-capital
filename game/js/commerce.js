@@ -18,6 +18,7 @@ window.Commerce = (() => {
     {id:'brinegel',name:'심해 전해질',origin:'brine',hub:'rill',base:580,art:'ex-ampoule-rain',use:'릴 저장 전지의 이온 보충액'},
     {id:'quartz',name:'위상 석영',origin:'opal',hub:'sable',base:1240,art:'luxTideglass',use:'사블 변전소의 주파수 표준'},
     {id:'spore',name:'야광 포자포',origin:'rill',hub:'brine',base:740,art:'luxWeave',use:'브린 잠수부용 저조도 표식'},
+    {id:'cryo',name:'극저온 축열봉',origin:'nix',hub:'lumen',base:1050,art:'ex-tablet-ice',use:'루멘 주조로의 폐열 회수재'},
   const byId = id => goods.find(g => g.id === id);
   const port = id => GameData.planets.find(p => p.id === id);
   const integer = (n, lo=0, hi=Number.MAX_SAFE_INTEGER) => Number.isSafeInteger(n) && n>=lo && n<=hi;

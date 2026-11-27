@@ -21,6 +21,7 @@ window.GameData = (() => {
     {id:'SEL',volatility:.019,name:'세린 염광조합',en:'Serein Salterns',color:'#abceda',icon:'layers',price:1180,weight:10,specialty:'세린 결정염 생산 기지'},
     {id:'ARC',volatility:.029,name:'변경 호송해운',en:'Arc Convoy',color:'#9cd7ab',icon:'shield',price:2130,weight:14,ships:2,specialty:'변경 항로 운송 · 화물선 2척'}
   ];
+  planets.push(
   const techs = [
     {id:'warp',name:'워프 추진기',desc:'레벨당 항로 회전율 +18%',cost:18500,icon:'rocket'},
     {id:'cargo',name:'양자 화물칸',desc:'레벨당 운송 단가 +22%',cost:22000,icon:'box'},

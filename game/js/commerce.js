@@ -12,6 +12,7 @@ window.Commerce = (() => {
     {id:'salt',name:'진주 결정염',origin:'serein',hub:'calyx',base:350,art:'ex-ampoule-rain',use:'칼릭스 배양장의 영양액을 조제하는 결정염'},
     {id:'resin',name:'수목 수지',origin:'calyx',hub:'mira',base:560,art:'luxSeed',use:'미라 공방의 유리 틀을 밀봉하는 수지'}
   ];
+  goods.push(
   const byId = id => goods.find(g => g.id === id);
   const port = id => GameData.planets.find(p => p.id === id);
   const integer = (n, lo=0, hi=Number.MAX_SAFE_INTEGER) => Number.isSafeInteger(n) && n>=lo && n<=hi;
